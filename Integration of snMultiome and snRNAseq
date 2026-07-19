@@ -108,3 +108,124 @@ P21_P26_P56 <- RunUMAP(P21_P26_P56, dims = 1:50, reduction = "integrated.cca", r
 DimPlot(P21_P26_P56, reduction = "umap", label = T, group.by = "orig.ident")
 DimPlot(P21_P26_P56, reduction = "umap", label = T, group.by = "seurat_clusters")
 table(P21_P26_P56$orig.ident, P21_P26_P56$seurat_clusters)
+
+
+############Correlation between clusters based on PCA genes
+
+emb.mn.avg <- as.data.frame(AggregateExpression(E15_merge, assay = "RNA", slot = "data")) 
+emb.cv <- data.frame(
+  gene = rownames(emb.mn.avg),
+  mean = rowMeans(emb.mn.avg),
+  sd = apply(emb.mn.avg, 1, sd)
+) %>%
+  mutate(
+    cv = ifelse(mean > 0, sd / mean, NA)
+  )
+hist(emb.cv$cv)
+emb.cv.sub <- filter(emb.cv, cv > 0.75)
+Idents(E15_merge) <- "seurat_clusters"
+emb.mn.avg <-setDT(emb.mn.avg, keep.rownames = "gene")
+pcamarkers_emb <- as.data.frame(E15_merge@reductions[["pca"]]@feature.loadings)[1:50] #1471
+pcamarkers_emb_sub <- pcamarkers_emb %>% setDT(keep.rownames = "gene")
+pcamarkers_emb_sub <- merge(pcamarkers_emb_sub, emb.cv.sub, by = "gene")
+pcamarkers_emb_sub <- as.data.frame(pcamarkers_emb_sub$gene)
+pcamarkers_embavg <- merge(pcamarkers_emb_sub, emb.mn.avg, by.x = "pcamarkers_emb_sub$gene", by.y = "gene", sort = F)
+d <- pcamarkers_embavg[,2:ncol(pcamarkers_embavg)]
+rnames <- pcamarkers_embavg[,1]
+mat_data<- data.matrix(d)
+cc_cor_emb <- cor(mat_data, method = "pearson") 
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+#pheatmap(cc_cor_emb, color = colorpal, display_numbers = T, row.names = rnames)
+
+
+neo.mn.avg <- as.data.frame(AggregateExpression(P3_P5_P7, assay = "RNA", slot = "data")) 
+neo.cv <- data.frame(
+  gene = rownames(neo.mn.avg),
+  mean = rowMeans(neo.mn.avg),
+  sd = apply(neo.mn.avg, 1, sd)
+) %>%
+  mutate(
+    cv = ifelse(mean > 0, sd / mean, NA)
+  )
+hist(neo.cv$cv)
+neo.cv.sub <- filter(neo.cv, cv > 0.75)
+Idents(P3_P5_P7) <- "seurat_clusters"
+neo.mn.avg <-setDT(neo.mn.avg, keep.rownames = "gene")
+pcamarkers_neo <- as.data.frame(P3_P5_P7@reductions[["pca"]]@feature.loadings)[1:50] #1471
+pcamarkers_neo_sub <- pcamarkers_neo %>% setDT(keep.rownames = "gene")
+pcamarkers_neo_sub <- merge(pcamarkers_neo_sub, neo.cv.sub, by = "gene")
+pcamarkers_neo_sub <- as.data.frame(pcamarkers_neo_sub$gene)
+pcamarkers_neoavg <- merge(pcamarkers_neo_sub, neo.mn.avg, by.x = "pcamarkers_neo_sub$gene", by.y = "gene", sort = F)
+d <- pcamarkers_neoavg[,2:ncol(pcamarkers_neoavg)]
+rnames <- pcamarkers_neoavg[,1]
+mat_data<- data.matrix(d)
+cc_cor_neo <- cor(mat_data, method = "pearson") 
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+#pheatmap(cc_cor_neo, color = colorpal, display_numbers = T, row.names = rnames)
+
+mat.mn.avg <- as.data.frame(AggregateExpression(P21_P26_P56, assay = "RNA", slot = "data")) 
+mat.cv <- data.frame(
+  gene = rownames(mat.mn.avg),
+  mean = rowMeans(mat.mn.avg),
+  sd = apply(mat.mn.avg, 1, sd)
+) %>%
+  mutate(
+    cv = ifelse(mean > 0, sd / mean, NA)
+  )
+hist(mat.cv$cv)
+mat.cv.sub <- filter(mat.cv, cv > 0.75)
+Idents(P21_P26_P56) <- "seurat_clusters"
+mat.mn.avg <-setDT(mat.mn.avg, keep.rownames = "gene")
+pcamarkers_mat <- as.data.frame(P21_P26_P56@reductions[["pca"]]@feature.loadings)[1:50] #1471
+pcamarkers_mat_sub <- pcamarkers_mat %>% setDT(keep.rownames = "gene")
+pcamarkers_mat_sub <- merge(pcamarkers_mat_sub, mat.cv.sub, by = "gene")
+pcamarkers_mat_sub <- as.data.frame(pcamarkers_mat_sub$gene)
+pcamarkers_matavg <- merge(pcamarkers_mat_sub, mat.mn.avg, by.x = "pcamarkers_mat_sub$gene", by.y = "gene", sort = F)
+d <- pcamarkers_matavg[,2:ncol(pcamarkers_matavg)]
+rnames <- pcamarkers_matavg[,1]
+mat_data<- data.matrix(d)
+cc_cor_mat <- cor(mat_data, method = "pearson") 
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+
+cc_cor_emb_long <- tidyr::pivot_longer(as.data.frame(cc_cor_emb), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_emb_long$age <- "emb"
+cc_cor_emb_long <- dplyr::select(cc_cor_emb_long, age, corr) %>% filter(corr < 1) %>% unique
+
+cc_cor_neo_long <- tidyr::pivot_longer(as.data.frame(cc_cor_neo), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_neo_long$age <- "neo"
+cc_cor_neo_long <- dplyr::select(cc_cor_neo_long, age, corr) %>% filter(corr < 1) %>% unique
+
+
+cc_cor_mat_long <- tidyr::pivot_longer(as.data.frame(cc_cor_mat), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_mat_long$age <- "mat"
+cc_cor_mat_long <- dplyr::select(cc_cor_mat_long, age, corr) %>% filter(corr < 1) %>% unique
+
+
+corr <- rbind(cc_cor_emb_long, cc_cor_neo_long, cc_cor_mat_long)
+
+
+corr$age <- factor(corr$age, levels = c("emb", "neo", "mat"))
+p <- ggplot(corr, aes(x=age, y=corr)) +
+  geom_violin(trim = T, fill = "lightblue", alpha = 0.5) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+  geom_jitter(shape = 16, position = position_jitter(0.2), alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Correlation all rna-pca genes 50pcs merge clusters",
+       x = "Age",
+       y = "Pair-wise correlations between clusters")
+print(p)
+
+library(rstatix)
+# ANOVA test
+anova_result <- corr %>%
+  anova_test(corr ~ age)
+
+# Print ANOVA result
+print(anova_result)
+
+
+# Pairwise comparisons (if ANOVA is significant)
+pairwise_results <- corr %>%
+  pairwise_t_test(corr ~ age, p.adjust.method = "bonferroni")
+
+print(pairwise_results)
