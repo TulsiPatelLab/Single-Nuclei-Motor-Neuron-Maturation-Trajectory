@@ -179,6 +179,11 @@ VlnPlot(P26.rna.mn, features = "nCount_RNA")
 
 
 #merge without integration
+E15.rna.mn@meta.data[["orig.ident"]] <- "E15x"
+P5.rna.mn@meta.data[["orig.ident"]] <- "P5"
+P26.rna.mn@meta.data[["orig.ident"]] <- "P26"
+
+
 mn.allages.rna <- merge (x = E15.rna.mn, y = c(P5.rna.mn, P26.rna.mn))
 DefaultAssay(mn.allages.rna) <- 'RNA'
 mn.allages.rna[['SCT']] <- NULL
@@ -191,6 +196,85 @@ mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbos
   FindClusters(resolution = 0.8, verbose = FALSE)
 DimPlot(mn.allages.rna, label = F, group.by = "orig.ident")
 DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters")
+
+
+#mesuring PCA distances
+
+write.table(as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident)), file = "mn-newallages-cluster-ages.txt", sep = "\t", quote = F)
+Idents(mn.allages.rna) <- "orig.ident"
+allages.rna.E15 <- subset(mn.allages.rna, ident = "E15_pipseq")
+Idents(allages.rna.E15) <- "seurat_clusters"
+allages.rna.E15 <- subset(allages.rna.E15, ident = c(6, 7, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 23, 25, 26, 27, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44))
+pca <- Embeddings(allages.rna.E15, reduction = "pca")
+clusters <- allages.rna.E15$seurat_clusters
+centroids <- aggregate(pca, by = list(cluster = clusters), FUN = mean)
+rownames(centroids) <- centroids$cluster
+centroids <- centroids[, -1]
+dist_matrix_E15 <- stats::dist(centroids)
+#as.matrix(dist_matrix_E15)
+pheatmap(as.matrix(dist_matrix_E15))
+pca_dist_rna_E15_long <- tidyr::pivot_longer(as.data.frame(dist_matrix_E15), cols = everything(), names_to = "variable", values_to = "corr")
+pca_dist_rna_E15_long$age <- "E15"
+pca_dist_rna_E15_long <- dplyr::select(pca_dist_rna_E15_long, age, corr) %>% unique %>% filter(corr > 0)
+
+allages.rna.P5 <- subset(mn.allages.rna, ident = "P5_pipseq_r2")
+Idents(allages.rna.P5) <- "seurat_clusters"
+allages.rna.P5 <- subset(allages.rna.P5, ident = c(1, 3, 5, 8))
+pca <- Embeddings(allages.rna.P5, reduction = "pca")
+clusters <- allages.rna.P5$seurat_clusters
+centroids <- aggregate(pca, by = list(cluster = clusters), FUN = mean)
+rownames(centroids) <- centroids$cluster
+centroids <- centroids[, -1]
+dist_matrix_P5 <- stats::dist(centroids)
+as.matrix(dist_matrix_P5)
+pheatmap(as.matrix(dist_matrix_P5))
+pca_dist_rna_P5_long <- tidyr::pivot_longer(as.data.frame(dist_matrix_P5), cols = everything(), names_to = "variable", values_to = "corr")
+pca_dist_rna_P5_long$age <- "P5"
+pca_dist_rna_P5_long <- dplyr::select(pca_dist_rna_P5_long, age, corr) %>% unique %>% filter(corr > 0)
+
+allages.rna.P26 <- subset(mn.allages.rna, ident =c("P26"))
+Idents(allages.rna.P26) <- "seurat_clusters"
+allages.rna.P26 <- subset(allages.rna.P26, ident = c(0, 2, 4, 9, 13, 16)) #for pca_dist_rna_P26_long_1
+allages.rna.P26 <- subset(allages.rna.P26, ident = c(0, 2, 4, 9)) # for pca_dist_rna_P26_long_2
+pca <- Embeddings(allages.rna.P26, reduction = "pca")
+clusters <- allages.rna.P26$seurat_clusters
+centroids <- aggregate(pca, by = list(cluster = clusters), FUN = mean)
+rownames(centroids) <- centroids$cluster
+centroids <- centroids[, -1]
+dist_matrix_P26 <- stats::dist(centroids)
+as.matrix(dist_matrix_P26)
+pheatmap(as.matrix(dist_matrix_P26))
+pca_dist_rna_P26_long_1 <- tidyr::pivot_longer(as.data.frame(dist_matrix_P26), cols = everything(), names_to = "variable", values_to = "corr")
+pca_dist_rna_P26_long_1$age <- "P26-1"
+pca_dist_rna_P26_long_1 <- dplyr::select(pca_dist_rna_P26_long_1, age, corr) %>% unique %>% filter(corr > 0)
+
+pca_dist_rna_P26_long_2 <- tidyr::pivot_longer(as.data.frame(dist_matrix_P26), cols = everything(), names_to = "variable", values_to = "corr")
+pca_dist_rna_P26_long_2$age <- "P26-2"
+pca_dist_rna_P26_long_2 <- dplyr::select(pca_dist_rna_P26_long_2, age, corr) %>% unique %>% filter(corr > 0)
+
+pca_dist_all <- as.data.frame(rbind(pca_dist_rna_E15_long, pca_dist_rna_P5_long, pca_dist_rna_P26_long_1, pca_dist_rna_P26_long_2)) # %>% rename("age" = "V1", "corr" = "z")
+pca_dist_all$age <- factor(pca_dist_all$age, levels = c("E15", "P5", "P26-1", "P26-2"))
+p <- ggplot(pca_dist_all, aes(x=age, y=corr)) +
+  geom_violin(trim = T, fill = "lightblue", alpha = 0.5) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+  geom_jitter(shape = 16, position = position_jitter(0.2), alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Correlation MN with variable features",
+       x = "Age",
+       y = "Pair-wise correlations between clusters")
+print(p)
+
+anova_result <- pca_dist_all %>%
+  anova_test(corr ~ age)
+
+# Print ANOVA result
+print(anova_result)
+
+# Pairwise comparisons (if ANOVA is significant)
+pairwise_results <-pca_dist_all %>%
+  pairwise_t_test(corr ~ age, p.adjust.method = "bonferroni")
+print(pairwise_results)
+
 
 
 #plotting gene modules
