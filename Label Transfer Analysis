@@ -1,0 +1,616 @@
+#Label transfer analyses. 
+
+#processing data from Alkaslasi et al.
+
+expression_mtx <- ReadMtx(mtx = "~/GSE167597_RAW/Cervical_MF/matrix.mtx.gz", features = "~/GSE167597_RAW/Cervical_MF/features.tsv.gz", cells = "~/GSE167597_RAW/Cervical_MF/barcodes.tsv.gz")
+cervical <- CreateSeuratObject(expression_mtx, min.features = 100) 
+cervical[["percent.mt"]] <- PercentageFeatureSet(cervical, pattern = "^MT-")
+# Visualize QC metrics as a violin plot
+VlnPlot(cervical, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+cervical <- subset(cervical, subset = nFeature_RNA > 500 & nFeature_RNA < 4000 & percent.mt < 5)
+
+
+expression_mtx <- ReadMtx(mtx = "~/GSE167597_RAW/Lumbar_MF/matrix.mtx.gz", features = "~/GSE167597_RAW/Lumbar_MF/features.tsv.gz", cells = "~/GSE167597_RAW/Lumbar_MF/barcodes.tsv.gz")
+lumbar <- CreateSeuratObject(expression_mtx, min.features = 100) 
+lumbar[["percent.mt"]] <- PercentageFeatureSet(lumbar, pattern = "^MT-")
+# Visualize QC metrics as a violin plot
+VlnPlot(lumbar, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+lumbar <- subset(lumbar, subset = nFeature_RNA > 500 & nFeature_RNA < 4000 & percent.mt < 5)
+
+
+cervical@meta.data[["orig.ident"]] <- "cervical"
+lumbar@meta.data[["orig.ident"]] <- "lumbar"
+
+
+p56.c <- merge(cervical, lumbar, add.cell.ids = c("cervical", "lumbar"), project = "AlkaslasiP56")
+
+p56.c <- NormalizeData(p56.c)
+p56.c <- FindVariableFeatures(p56.c)
+p56.c <- ScaleData(p56.c)
+p56.c <- RunPCA(p56.c)
+p56.c <- IntegrateLayers(object = p56.c, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+                              verbose = FALSE)
+
+# now that integration is complete, rejoin layers
+p56.c@assays[["RNA"]] <- JoinLayers(p56.c@assays[["RNA"]])
+
+p56.c <- FindNeighbors(p56.c, reduction = "integrated.cca", dims = 1:30)
+p56.c <- FindClusters(p56.c, resolution = 0.7)
+p56.c <- RunUMAP(p56.c, dims = 1:30, reduction = "integrated.cca")
+DimPlot(p56.c, label = T, label.size = 3)
+
+features <- c("Pitx2", "Chat", "Slc5a7", "Arhgap36")
+features <- c("Nos1", "Foxp1", "Zeb2", "Cpne4", "Fbn2", "Fign")
+features <- c("Pitx2", "Tns1", "Ret", "Gfra1", "Bcl6")
+features <- c("Zeb2", "Fbn2")
+features <- c("Chat", "Gad1", "Slc17a6", "Tns1", "Zeb2", "Fbn2")
+features <- c("Zeb2", "Fign", "Tns1", "Ret", "Bcl6")
+FeaturePlot(p56.c, features = features)
+VlnPlot(p56.c, features = features, group.by = "seurat_clusters")
+
+#assigning cell IDs based on expression, subsetting SMNs and PGMNs (or pgmns)
+p56.c.mn <- subset(p56.c, idents = c(2, 7, 11))
+p56.c.mn <- SCTransform(p56.c.mn, vst.flavor = "v2", verbose = FALSE) %>%
+  RunPCA(npcs = 50, verbose = FALSE) %>%
+  RunUMAP(reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.7, verbose = FALSE)
+DimPlot(p56.c.mn)
+FeaturePlot(p56.c.mn, features = c("Klhl1", "Rora", "Aox1", "Gpr149"))
+
+p56.c.pgmn <- subset(p56.c, idents = c(12, 13, 14, 17, 19, 21))
+p56.c.pgmn <- SCTransform(p56.c.pgmn, vst.flavor = "v2", verbose = FALSE) %>%
+  RunPCA(npcs = 50, verbose = FALSE) %>%
+  RunUMAP(reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.7, verbose = FALSE)
+DimPlot(p56.c.pgmn)
+FeaturePlot(p56.c.mn, features = c("Creb5", "Rora", "Aox1", "Gpr149"))
+
+
+Idents(P21.multi.5k) <-P21.multi.5k$celltype_P21 #seurat clusters in this object
+P21.multi.5k.mn <- subset(P21.multi.5k, idents = c(0,2,8)) #alpha, gamma, type3 MN clusters in this object
+
+P21.multi.5k.mn <- SCTransform(P21.multi.5k.mn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P21.multi.5k.mn, reduction = "umap.rna", group.by = "celltype_P21", label = TRUE, label.size = 4, repel = TRUE) + ggtitle("RNA")
+FeaturePlot(P21.multi.5k.mn, features = c("Creb5", "Rora", "Aox1", "Gpr149"))
+
+#checking expression of alpha, gamma, type3 markers
+
+features <- c("Stk32a", "Sv2b", "Lypd6", "Adra1a", "Ccdc88c", "Aox1", "Plxdc2", "Gpr149", "Trpc5", "Rreb1", "C1qtnf4", "Adamts2", "Cntnap3", "Plcl1", "Pard3b", "Nrp2", "Cdh11", "Samd5", "Otof", "Adamts16", "Col27a1")
+DotPlot(P21.multi.5k.mn, features = features, cols = c("gray80", "#0000ff")) + RotatedAxis()
+DotPlot(P21.multi.5k.mn, features = features, cols = c("gray80", "#ff6a6a")) + RotatedAxis()
+DotPlot(P21.multi.5k.mn, features = features, cols = c("gray80", "#2bb673")) + RotatedAxis()
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4, group.by = "celltype_P21", cols = cols, pt.size = 0.3) + ggtitle("P21 on P21")
+cols = c("2"= "#0000ff", "0"= "#ff6a6a", "8" = "#2bb673", "NA" = "gray0")
+
+
+#label transfer of all ages on P21
+
+#E15 multiome on P21 multiome
+table(Idents(P21.multi.5k.mn))
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(E15.multi.5k.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = E15.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+E15.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = E15.multi.5k.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn
+E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(E15.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("E15 on P21")
+DimPlot(E15.multi.5k.mn, reduction = "umap.rna", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3, shuffle = T) + ggtitle("E15 on E15")
+table(E15.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+
+#P3 multiome on P21 multiome
+table(Idents(P21.multi.5k.mn))
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P3.multi.5k.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P3.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P3.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P3.multi.5k.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P3.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn
+P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P3.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P3 on P21")
+table(P3.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#P7 multiome on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P7.multi.5k.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P7.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P7.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P7.multi.5k.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(P7.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn
+P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P7.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P7 on P21")
+table(P7.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#P13 multiome on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P13.multi.5k.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P13.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P13.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P13.multi.5k.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(P13.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn
+P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P13.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P13 on P21")
+table(P13.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#P56 multiome on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P56.multi.5k.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P56.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P56.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P56.multi.5k.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(P56.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn
+P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P56.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P56 on P21")
+table(P56.multi.5k.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+
+#P5 rna on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P5.rna.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P5.rna.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P5.rna.mn <- MapQuery(
+  anchorset = anchors,
+  query = P5.rna.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(P5.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P5.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- P5.rna.mn$predicted.celltype_P21.multi.5k.mn
+P5.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P5.rna.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P5.rna.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P5.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P56 on P21")
+table(P5.rna.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#E15.5 rna on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(E15.rna.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = E15.rna.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+E15.rna.mn <- MapQuery(
+  anchorset = anchors,
+  query = E15.rna.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(E15.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+E15.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- E15.rna.mn$predicted.celltype_P21.multi.5k.mn
+E15.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(E15.rna.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, E15.rna.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(E15.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P56 on P21")
+table(E15.rna.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#P26 rna on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(P26.rna.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = P26.rna.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P26.rna.mn <- MapQuery(
+  anchorset = anchors,
+  query = P26.rna.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(P26.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+P26.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- P26.rna.mn$predicted.celltype_P21.multi.5k.mn
+P26.rna.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(P26.rna.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, P26.rna.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(P26.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("P56 on P21")
+table(P26.rna.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+#Alkaslasi et al rna on P21 multiome
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.multi.5k.mn$celltype_P21.multi.5k.mn <- Idents(P21.multi.5k.mn)
+DefaultAssay(p56.c.mn) <- 'SCT'
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = P21.multi.5k.mn,
+  query = p56.c.mn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+p56.c.mn <- MapQuery(
+  anchorset = anchors,
+  query = p56.c.mn,
+  reference = P21.multi.5k.mn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_P21.multi.5k.mn = "celltype_P21.multi.5k.mn"))
+
+DimPlot(P21.multi.5k.mn, label = T, label.size = 4)
+DimPlot(p56.c.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn")
+
+p56.c.mn$predicted.celltype_P21.multi.5k.mn_NA <- p56.c.mn$predicted.celltype_P21.multi.5k.mn
+p56.c.mn$predicted.celltype_P21.multi.5k.mn_NA <- ifelse(p56.c.mn$predicted.celltype_P21.multi.5k.mn.score > 0.6, p56.c.mn$predicted.celltype_P21.multi.5k.mn_NA, "NA")
+
+DimPlot(p56.c.mn, reduction = "ref.umap", group.by = "predicted.celltype_P21.multi.5k.mn_NA", cols = cols, pt.size = 0.3) + ggtitle("Alkaslasi on P21")
+
+table(p56.c.mn$predicted.celltype_P21.multi.5k.mn_NA)
+
+
+#plotting gene expression on ref.umap
+p1 <- FeaturePlot(E15.multi.5k.mn, reduction = "ref.umap", features = "Klhl1")
+p2 <- FeaturePlot(P3.multi.5k.mn, reduction = "ref.umap", pt.size = 0.5, features = "Klhl1")
+p3 <- FeaturePlot(P7.multi.5k.mn, reduction = "ref.umap", pt.size = 0.5,features = "Klhl1")
+p4 <- FeaturePlot(P13.multi.5k.mn, reduction = "ref.umap", pt.size = 0.5,features = "Klhl1")
+p5 <- FeaturePlot(P21.multi.5k.mn, reduction = "umap.rna", pt.size = 0.5,features = "Klhl1")
+p6 <- FeaturePlot(P56.multi.5k.mn, reduction = "umap.rna", pt.size = 0.5,features = "Klhl1")
+
+p1|p2|p3|p4|p5|p6
+
+
+#Identifying which genes are enriched in cells that match to alpha, gamma, type3 clusters at each age
+
+Idents(P3.multi.5k.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P3.gamma.markers <- FindMarkers(P3.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P3.type3.markers <- FindMarkers(P3.multi.5k.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P3.alpha.markers <- FindMarkers(P3.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P5.rna.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P5.gamma.markers <- FindMarkers(P5.rna.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P5.type3.markers <- FindMarkers(P5.rna.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P5.alpha.markers <- FindMarkers(P5.rna.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(E15.multi.5k.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+E15.gamma.markers <- FindMarkers(E15.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+E15.alpha.markers <- FindMarkers(E15.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(E15.rna.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+E15p.gamma.markers <- FindMarkers(E15.rna.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+E15p.alpha.markers <- FindMarkers(E15.rna.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P7.multi.5k.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P7.gamma.markers <- FindMarkers(P7.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P7.type3.markers <- FindMarkers(P7.multi.5k.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P7.alpha.markers <- FindMarkers(P7.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P13.multi.5k.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P13.gamma.markers <- FindMarkers(P13.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P13.type3.markers <- FindMarkers(P13.multi.5k.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P13.alpha.markers <- FindMarkers(P13.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P21.multi.5k.mn) <- P21.multi.5k.mn@meta.data[["celltype_p21"]]
+P21.gamma.markers <- FindMarkers(P21.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P21.type3.markers <- FindMarkers(P21.multi.5k.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P21.alpha.markers <- FindMarkers(P21.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P26.rna.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P26.gamma.markers <- FindMarkers(P26.rna.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P26.type3.markers <- FindMarkers(P26.rna.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P26.alpha.markers <- FindMarkers(P26.rna.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+Idents(P56.multi.5k.mn) <- "predicted.celltype_P21.multi.5k.mn_NA"
+P56.gamma.markers <- FindMarkers(P56.multi.5k.mn, ident.1 = (0), only.pos = T) %>% setDT(keep.rownames = "gene")
+P56.type3.markers <- FindMarkers(P56.multi.5k.mn, ident.1 = (2), only.pos = T) %>% setDT(keep.rownames = "gene")
+P56.alpha.markers <- FindMarkers(P56.multi.5k.mn, ident.1 = (8), only.pos = T) %>% setDT(keep.rownames = "gene")
+
+# then checked what percent of top alpha, gamma, type3 markers were avg_log2FC > 1, p_val_adj < 0.001 in alpha, gamma, type3 marker of each age.
+
+
+# label transform for PGMNs. starting with subeset objects that contain PGMN from multiome data
+
+E15.multi.5k.pgmn <- SCTransform(E15.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(E15.multi.5k.pgmn, group.by = "seurat_clusters")
+
+P3.multi.5k.pgmn <- SCTransform(P3.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P3.multi.5k.pgmn, group.by = "seurat_clusters")
+
+P7.multi.5k.pgmn <- SCTransform(P7.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+
+P13.multi.5k.pgmn <- SCTransform(P13.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+
+P21.multi.5k.pgmn <- SCTransform(P21.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P21.multi.5k.pgmn, group.by = "seurat_clusters")
+
+P56.multi.5k.pgmn <- SCTransform(P56.multi.5k.pgmn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P56.multi.5k.pgmn, group.by = "seurat_clusters")
+
+DimPlot(P21.multi.5k.pgmn, group.by = "seurat_clusters")
+#set colors, such as:
+palette_func <- colorRampPalette(c("red3", "red" ,"#f8a64c", "#e2e243","darkgreen", "#8ec4ef","darkblue",  "#de51e9"))
+colors <- palette_func(42)
+cols <- c("0" = "#FF0000", "1" = "#FB5A29", "2" = "#F6AB4B", "3" = "#EACC46", "4" = "#D7DC4C", "5" = "#B6CA68", "6" = "#9FC297", "7" = "#92C3D9", "8" = "#5A7CCA","9" = "#0C1194", "10" = "#6424B5", "11" = "#DE51E9","12" =  "darkgreen", "13" = "cyan", "NA" = "gray0")
+
+#all ages on E15
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(P3.multi.5k.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = P3.multi.5k.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P3.multi.5k.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = P3.multi.5k.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(E15.multi.5k.pgmn, label = T, label.size = 3, cols= cols, pt.size = 1) + NoLegend() + ggtitle("E15 on E15")
+DimPlot(P3.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn", label = T, cols = colors) + NoLegend()
+
+P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn
+P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(P3.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 0.7) +  ggtitle("P3 on E15") + NoLegend()
+table(P3.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA)
+
+
+
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(P7.multi.5k.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = P7.multi.5k.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P7.multi.5k.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = P7.multi.5k.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(E15.multi.5k.pgmn, label = T, label.size = 4)
+DimPlot(P7.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn")
+
+P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn
+P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(P7.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 1) + NoLegend() + ggtitle("P7 on E15")
+table(P7.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA)
+
+
+
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(P13.multi.5k.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = P13.multi.5k.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P13.multi.5k.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = P13.multi.5k.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(E15.multi.5k.pgmn, label = T, label.size = 4)
+DimPlot(P13.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn")
+
+P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn
+P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(P13.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 1) + NoLegend() + ggtitle("P13 on E15")
+
+table(P13.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA)
+
+
+
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(P21.multi.5k.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = P21.multi.5k.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P21.multi.5k.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = P21.multi.5k.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(E15.multi.5k.pgmn, label = T, label.size = 4)
+p1 <- DimPlot(P21.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn", cols = colors)
+p2 <- DimPlot(P21.multi.5k.pgmn, reduction = "ref.umap", group.by = "seurat_clusters_NA")
+p1 | p2
+
+P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn
+P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(P21.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 1) + NoLegend() + ggtitle("P21 on E15")
+table(P21.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA)
+
+
+
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(P56.multi.5k.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = P56.multi.5k.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+P56.multi.5k.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = P56.multi.5k.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(E15.multi.5k.pgmn, label = T, label.size = 4)
+DimPlot(P56.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn")
+
+P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn
+P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(P56.multi.5k.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 1) + NoLegend() + ggtitle("P56 on E15")
+
+as.data.frame(table(P56.multi.5k.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA))
+
+
+E15.multi.5k.pgmn$celltype_E15.multi.5k.pgmn <- Idents(E15.multi.5k.pgmn)
+DefaultAssay(p56.c.pgmn) <- 'SCT'
+DefaultAssay(E15.multi.5k.pgmn) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15.multi.5k.pgmn,
+  query = p56.c.pgmn,
+  normalization.method = "SCT",
+  reference.reduction = "pca",
+  dims = 1:50
+)
+p56.c.pgmn <- MapQuery(
+  anchorset = anchors,
+  query = p56.c.pgmn,
+  reference = E15.multi.5k.pgmn,
+  reference.reduction = "pca", 
+  reduction.model = "umap.rna",
+  refdata = list(celltype_E15.multi.5k.pgmn = "celltype_E15.multi.5k.pgmn"))
+
+DimPlot(p56.c.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn")
+
+p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn
+p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA <- ifelse(p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn.score > 0.6, p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA, "NA")
+
+DimPlot(p56.c.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.multi.5k.pgmn_NA", cols = cols, pt.size = 1)
+as.data.frame(table(p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA))
+
+
+
+
