@@ -1,0 +1,110 @@
+#Integration of snMultiome and snRNAseq
+
+#E15_merge
+
+E15.multi.5k.mn@meta.data[["orig.ident"]] <- "E15-10x"
+E15.rna.mn@meta.data[["orig.ident"]] <- "E15-pip"
+
+E15_merge <- merge(x = E15.multi.5k.mn, y = E15.rna.mn)
+
+DefaultAssay(E15_merge) <- 'RNA'
+E15_merge <- NormalizeData(E15_merge, assay = "RNA")
+E15_merge <- FindVariableFeatures(E15_merge)
+E15_merge <- ScaleData(E15_merge)
+E15_merge <- RunPCA(E15_merge)
+E15_merge <- IntegrateLayers(object = E15_merge, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+                             verbose = FALSE)
+
+# now that integration is complete, rejoin layers
+E15_merge@assays$RNA <- JoinLayers(E15_merge@assays$RNA)
+E15_merge <- FindNeighbors(E15_merge, reduction = "integrated.cca", dims = 1:50)
+E15_merge <- FindClusters(E15_merge, resolution = 0.5)
+E15_merge <- RunUMAP(E15_merge, dims = 1:50, reduction = "integrated.cca", return.model=TRUE)
+p1 <- DimPlot(E15_merge, reduction = "umap", label = T, group.by = "orig.ident")
+p2 <- DimPlot(E15_merge, reduction = "umap", label = T, group.by = "seurat_clusters")
+p1 | p2
+
+table(E15_merge$orig.ident, E15_merge$seurat_clusters)
+
+features <- c("Foxp1", "Aldh1a2", "Isl1", "Lhx1","Onecut1",  "Cpne8", "Bnc2", "Cpne4", "Fign", "Hmga2", "Pknox2", "Pnoc", "Pou6f2", "Ntn1", "Tox", "Zeb2", "Etv4", "Rfx6", "Spon1", "Angpt1","Ebf3", "Bcl11b", "Irx5", "Dscaml1", "Mitf", "Slc17a8", "Bace2", "Stxbp6", "Sox6", "Nts", "Nxph2", "Etv1",  "Reg3b", "Lmo7",  "Sox5", "Pth2r", "Synpo", "Ptprz1", "Lypd1", "Hotairm1", "Thsd4","Fgf10","Adgrg6", "Taf4b",  "Lmo3", "Glra3", "Gabrg1", "Hs3st3a1", "Hs3st3b1", "Tacr3", "Lrmda", "Smug1", "Necab1", "Zfhx4", "Runx1",  "Phox2b", "Tbx2", "Tbx20", "Pmfbp1", "Mecom", "Lhx4", "Ror1", "Prdm16", "Foxo1", "Satb2", "Nr2f2", "C130071C03Rik", "Lhx3", "Ebf2", "Pou3f1", "Chst9", "Klf5", "Erbb4", "Pdzrn4", "Rspo3")  
+
+#LMC, MMC, HMC, SAC identities assigned according to known markers. numbers within columns assigned based on cell numbers and shared gene expression
+
+E15_merge$celltype <- E15_merge$seurat_clusters
+Idents(E15_merge) <- E15_merge$celltype
+E15_merge <- RenameIdents(E15_merge, "1" = "Lm1", "6" = "Lm2", "14" = "Lm3", "29" = "Lm4", "34" = "Lm5", "40" = "Lm6", "4" = "Lm7", "15" = "Lm8", "22" = "Lm9", "18" = "Lm10", "26" = "Lm11", "35" = "Lm12", "36" = "Lm13", "37" = "Lm14", "38" = "Lm15", "42" = "Lm16",
+  "31" = "L1","39" = "L2", "3" = "L3", "32" = "L4", 
+  "7" = "Ll1", "16" = "Ll2", "33" = "Ll3", "10" = "Ll4", "25" = "Ll5", "27" = "Ll6", "30" = "Ll7", 
+  "17" = "S", 
+  "2" = "M1", "9" = "M2", "19" = "M3", "12" = "M4", "21" = "M5", "23" = "M6", "0" = "M7", "41" = "M8", "28" = "M9", 
+  "20" = "P",
+  "5" = "H1", "11" = "H2", "8" = "H3", "13" = "H4", "24" = "H5")
+E15_merge$celltype <- Idents(E15_merge)
+colors = c("Lm1"="#FF0000", "Lm2"="#FE170A", "Lm3"="#FD2F15", "Lm4"="#FC4720", "Lm5"="#FB5E2B", "Lm6"="#FA7636", "Lm7"="#F98E41", "Lm8"="#F8A64C", "Lm9"="#F4AE4A", "Lm10"="#F1B749", "Lm11"="#EEBF48", "Lm12"="#EBC846", "Lm13"="#E8D045", "Lm14"="#E5D944", "Lm15"="#E2E243", "Lm16"="#D9DD4A", "L1"="#D0D851", "L2"="#C8D459", "L3"="#BFCF60", "L4"="#B7CB68", "Ll1"="#AEC66F", "L12"="#A6C277", "Ll3"="#A2C288", "Ll4"="#9FC299", "Ll5"="#9BC2AA", "Ll6"="#98C3BB", "Ll7"="#94C3CC", "S"="#91C3DD", "M1"="#8EC4EF", "M2"="#79A7E0", "M3"="#658CD2", "M4"="#5170C4", "M5"="#3C53B5", "M6"="#2837A7", "M7"="#141B99", "M8"= "#00008B", "M9"="#1F0B98", "P"="#3F17A5", "H1"="#5F22B3", "H2"="#7E2EC0", "H3"="#9E39CE", "H4"= "#BE45DB", "H5"="#DE51E9", , "NA" = "gray0")
+DimPlot(E15_merge, cols = colors, group.by = "celltype", label = T, pt.size = 0.2)
+
+
+E15.merge.allmarkers <- FindAllMarkers(E15_merge, only.pos = T, min.pct = 0.25) %>% filter(p_val_adj < 0.001)
+
+
+E15.merge.lmc.markers <- FindMarkers(E15_merge, ident.1 = c("Lm1", "Lm2", "Lm3", "Lm4", "Lm5", "Lm6", "Lm7", "Lm8", "Lm9", "Lm10", "Lm11", "Lm12","Lm13","Lm14", "Lm15", "Lm16", "Ll1", "Ll2", "Ll3", "Ll4", "Ll5", "Ll6", "Ll7", "L1", "L2", "L3", "L4"), min.pct = 0.25, only.pos = T) 
+
+E15.merge.lmcm.markers <- FindMarkers(E15_merge, ident.1 = c("Lm1", "Lm2", "Lm3", "Lm4", "Lm5", "Lm6", "Lm7", "Lm8", "Lm9", "Lm10", "Lm11", "Lm12","Lm13","Lm14", "Lm15", "Lm16"), min.pct = 0.25, only.pos = T) 
+
+E15.merge.lmcl.markers <- FindMarkers(E15_merge, ident.1 = c("Ll1", "Ll2", "Ll3", "Ll4", "Ll5", "Ll6", "Ll7"), min.pct = 0.25, only.pos = T) 
+
+E15.merge.mmc.markers <- FindMarkers(E15_merge, ident.1 = c("M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9"), min.pct = 0.25, only.pos = T) 
+
+E15.merge.hmc.markers <- FindMarkers(E15_merge, ident.1 = c("H1", "H2", "H3", "H4", "H5"), min.pct = 0.25, only.pos = T) 
+
+#P3_P5_P7
+P5.rna.mn[["orig.ident"]] <- "P5"
+P3.multi.5k.mn@meta.data[["orig.ident"]] <- "P3"
+P7.multi.5k.mn@meta.data[["orig.ident"]] <- "P7"
+
+P3_P5_P7 <- merge(x = P3.multi.5k.mn, y = c(P5.rna.mn, P7.multi.5k.mn))
+
+DefaultAssay(P3_P5_P7) <- 'RNA'
+P3_P5_P7 <- NormalizeData(P3_P5_P7, assay = "RNA")
+P3_P5_P7 <- FindVariableFeatures(P3_P5_P7)
+P3_P5_P7 <- ScaleData(P3_P5_P7)
+P3_P5_P7 <- RunPCA(P3_P5_P7)
+P3_P5_P7 <- IntegrateLayers(object = P3_P5_P7, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+                            verbose = FALSE)
+
+# now that integration is complete, rejoin layers
+P3_P5_P7@assays$RNA <- JoinLayers(P3_P5_P7@assays$RNA)
+P3_P5_P7 <- FindNeighbors(P3_P5_P7, reduction = "integrated.cca", dims = 1:50)
+P3_P5_P7 <- FindClusters(P3_P5_P7, resolution = 0.5)
+P3_P5_P7 <- RunUMAP(P3_P5_P7, dims = 1:50, reduction = "integrated.cca", return.model=TRUE)
+DimPlot(P3_P5_P7, reduction = "umap", label = T, group.by = "orig.ident")
+DimPlot(P3_P5_P7, reduction = "umap", label = T, group.by = "seurat_clusters")
+table(P3_P5_P7$orig.ident, P3_P5_P7$seurat_clusters)
+
+
+#P21_P26_P56
+P26.rna.mn[["orig.ident"]] <- "P26"
+P21.multi.5k.mn@meta.data[["orig.ident"]] <- "P21-10x"
+P56.multi.5k.mn@meta.data[["orig.ident"]] <- "P56-10x"
+
+
+P21_P26_P56 <- merge(x = P21.multi.5k.mn, y = c(P26.rna.mn, P56.multi.5k.mn))
+
+P21_P26_P56@assays$SCT <- NULL
+DefaultAssay(P21_P26_P56) <- 'RNA'
+P21_P26_P56 <- NormalizeData(P21_P26_P56, assay = "RNA")
+P21_P26_P56 <- FindVariableFeatures(P21_P26_P56)
+P21_P26_P56 <- ScaleData(P21_P26_P56)
+P21_P26_P56 <- RunPCA(P21_P26_P56)
+P21_P26_P56 <- IntegrateLayers(object = P21_P26_P56, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+                             verbose = FALSE)
+
+# now that integration is complete, rejoin layers
+P21_P26_P56@assays$RNA <- JoinLayers(P21_P26_P56@assays$RNA)
+P21_P26_P56 <- FindNeighbors(P21_P26_P56, reduction = "integrated.cca", dims = 1:50)
+P21_P26_P56 <- FindClusters(P21_P26_P56, resolution = 0.5)
+P21_P26_P56 <- RunUMAP(P21_P26_P56, dims = 1:50, reduction = "integrated.cca", return.model=TRUE)
+#P21_P26_P56 <- subset(P21_P26_P56, nCount_RNA> 25000)
+DimPlot(P21_P26_P56, reduction = "umap", label = T, group.by = "orig.ident")
+DimPlot(P21_P26_P56, reduction = "umap", label = T, group.by = "seurat_clusters")
+table(P21_P26_P56$orig.ident, P21_P26_P56$seurat_clusters)
