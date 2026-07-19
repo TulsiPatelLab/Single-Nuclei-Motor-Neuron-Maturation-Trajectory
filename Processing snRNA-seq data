@@ -1,0 +1,203 @@
+#E15-snRNAseq
+
+data_dir <- "E15_snrnaseq" #directory with all processed files
+counts <- Read10X(data.dir = data_dir)
+E15.rna <- CreateSeuratObject(counts = counts, project = "E15.rna")
+
+E15.rna <- subset(
+  x = E15.rna,
+  subset = 
+    nCount_RNA > 6000)
+
+E15.rna <- SCTransform(E15.rna, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(E15.rna, reduction = "umap.rna", label = T, cols = colors)
+FeaturePlot(E15.rna, features = "nCount_RNA")
+VlnPlot(E15.rna, features = "nCount_RNA")
+DefaultAssay(E15.rna) <- 'RNA'
+E15.rna <- NormalizeData(E15.rna, assay = "RNA")
+E15.rna <- ScaleData(E15.rna, assay = "RNA")
+features <- c("Slc17a6", "Gad1", "Pitx2", "Chat", "Slc5a7", "Gfra1", "Ret", "Bcl6", "Fbn2", "Zeb2")
+FeaturePlot(E15.rna, features = features)
+VlnPlot(E15.rna, features = features)
+
+#eliminate c4 due to nCount_RNA and unclear marker separation
+E15.rna <- subset(E15.rna, idents = c(0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48))
+E15.rna <- SCTransform(E15.rna, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(E15.rna, reduction = "umap.rna", label = T, cols = colors)
+
+FeaturePlot(E15.rna_test, features = features)
+VlnPlot(E15.rna, features = features)
+E15.rna_test<- NormalizeData(E15.rna_test, assay = 'RNA')
+E15.rna_test<- ScaleData(E15.rna_test, assay = 'RNA')
+
+
+features <- c("Slc17a6", "Gad1", "Pitx2", "Chat", "Slc5a7", "Gfra1", "Ret", "Bcl6", "Fbn2", "Zeb2")
+FeaturePlot(E15.rna, features = features)
+VlnPlot(E15.rna, features = features)
+
+#label cell types based on markers
+Idents(E15.rna) <- "seurat_clusters"
+E15.rna.mn <- subset(E15.rna, idents = c(1, 3, 5, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 38, 39, 41, 42, 43, 44, 45, 46))
+# 25 = Pitx-IN
+# 2, 4, 6, 17 = VMN
+# 0, 11, 37 = CE
+# 29 = C
+# 40 = CI
+
+E15.rna$celltype <- E15.rna$seurat_clusters
+Idents(E15.rna) <- E15.rna$celltype
+E15.rna <- RenameIdents(E15.rna, "1" = "MN", "3" = "MN", "5" = "MN", "7" = "MN", "8" = "MN", "9" = "MN", "10" = "MN", "12" = "MN", "13" = "MN", "14" = "MN", "15" = "MN", "16" = "MN", "18" = "MN", "19" = "MN", "20" = "MN", "21" = "MN", "22" = "MN", "23" = "MN", "24" = "MN", "26" = "MN", "27" = "MN", "28" = "MN", "30" = "MN", "31" = "MN", "32" = "MN", "33" = "MN", "34" = "MN", "35" = "MN", "36" = "MN", "38" = "MN", "39" = "MN", "41" = "MN", "42" = "MN", "43" = "MN", "44" = "MN", "45" = "MN", "46" = "MN", "25" = "Pitx2-IN", "2" = "VMN", "4" = "VMN", "6" = "VMN", "17" = "VMN", "0" = "CE", "11" = "CE", "37" = "CE", "29" = "C", "40" = "CI")
+E15.rna$celltype <-E15.rna$celltype
+
+group_colors <- c("VMN" = "#a0d399" , "MN" = "#5c9285" , "Pitx2-IN" = "#f9a2b1" , "C" = "#b173f9", "CI" = "#e2e243", "I" = "#a37e6e", "CE" = "#95b2e5", "E" = "#4f80e5", "IE" = "#73eff9", "CEI" = "gray50", "Other" = "gray50", "NA" = "gray9")
+DimPlot(E15.rna, reduction = "umap.rna", label = F, cols = group_colors)
+DimPlot(E15.rna, reduction = "umap.rna", label = T, group.by = "seurat_clusters") + NoLegend()
+
+E15.rna.mn <- NormalizeData(E15.rna.mn, assay = "RNA")
+E15.rna.mn <- ScaleData(E15.rna.mn, assay = "RNA")
+E15.rna.mn <- SCTransform(E15.rna.mn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(E15.rna.mn, reduction = "umap.rna", label = T, cols = colors)
+FeaturePlot(E15.rna.mn, features = "nCount_RNA")
+VlnPlot(E15.rna.mn, features = "nCount_RNA")
+DefaultAssay(E15.rna.mn) <- 'RNA'
+
+
+#P5 snRNA-seq
+
+data_dir <- "P5_snrnaseq"
+counts <- Read10X(data.dir = data_dir)
+
+P5.rna <- CreateSeuratObject(counts = counts, project = "P5.rna")
+#P5.rna_s3 <- CreateSeuratObject(counts = counts, project = "P5.rna")
+
+P5.rna <- subset(
+  x = P5.rna,
+  subset = 
+    nCount_RNA > 6000)
+
+P5.rna <- SCTransform(P5.rna, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P5.rna, reduction = "umap.rna", label = T)
+P5.rna <- NormalizeData(P5.rna, assay = "RNA")
+P5.rna <- ScaleData(P5.rna, assay = "RNA")
+features <- c("Slc17a6", "Gad1", "Pitx2", "Chat", "Slc5a7", "Gfra1", "Ret", "Bcl6", "Fbn2", "Zeb2")
+FeaturePlot(P5.rna, features = "nCount_RNA")
+VlnPlot(P5.rna, features = "nCount_RNA")
+
+P5.rna.mn <- subset(P5.rna, idents = c(0, 1, 4, 27, 29, 31, 32, 33))
+# 19 = Pitx-IN()
+# 3, 8, 9, 10, 11, 13, 15, 16, 22, 23, 24, 25, 26, 28, 30, 34 = E
+# 2, 5, 17, 21, 35, 36 = CE
+# 6, 7, 14, 18, 37 = CI
+# 12, 39 = I
+# 0, 1, 4, 27, 29, 31, 32, 3 = MN
+# 20 = VMN
+# 38 = C
+
+P5.rna$celltype <- P5.rna$seurat_clusters
+Idents(P5.rna) <- P5.rna$celltype
+P5.rna <- RenameIdents(P5.rna, "0" = "MN", "1" = "MN", "4" = "MN", "27" = "MN", "29" = "MN", "31" = "MN", "32" = "MN", "33" = "MN", "3" = "E", "3" = "E", "8" = "E", "9" = "E", "10" = "E", "11" = "E", "13" = "E", "15" = "E", "16" = "E", "22" = "E", "23" = "E", "24" = "E", "25" = "E", "26" = "E", "28" = "E", "30" = "E", "34" = "E", "19" = "Pitx2-IN", "2" = "CE", "5" = "CE", "17" = "CE", "21" = "CE", "35" = "CE", "36" = "CE", "6" = "CI", "7" = "CI", "14" = "CI", "18" = "CI", "37" = "CI", "12" = "I", "39" = "I", "20" = "VMN", "38" = "C")
+P5.rna$celltype <- Idents(P5.rna)
+Idents(P5.rna) <- factor(
+  Idents(P5.rna),
+  levels = c("E", "Pitx2-IN", 'CE', 'CI', 'I', 'VMN', 'C', 'MN')
+)
+group_colors <- c("VMN" = "#a0d399" , "MN" = "#5c9285" , "Pitx2-IN" = "#f9a2b1" , "C" = "#b173f9", "CI" = "#e2e243", "I" = "#a37e6e", "CE" = "#95b2e5", "E" = "#4f80e5", "IE" = "#73eff9", "CEI" = "gray50", "Other" = "gray50", "NA" = "gray9")
+DimPlot(P5.rna, reduction = "umap.rna", label = F, cols = group_colors)
+
+
+P5.rna.mn <- SCTransform(P5.rna.mn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+
+DimPlot(P5.rna.mn, reduction = "umap.rna", label = T, cols = colors)
+VlnPlot(P5.rna.mn, features = "nCount_RNA")
+P5.rna.mn <- NormalizeData(P5.rna.mn, assay = "RNA")
+P5.rna.mn <- ScaleData(P5.rna.mn, assay = "RNA")
+FeaturePlot(P5.rna.mn, features = features)
+features <- c("Mecom", "Foxp1", "Isl1", "Pdzrn4", "C130071C03Rik", "Fign") #check various genes expression
+
+
+#P26 snRNAseq
+
+data_dir <- "P26_snrnaseq_r1"
+
+counts <- Read10X(data.dir = data_dir)
+P26.rna.r1 <- CreateSeuratObject(counts = counts, project = "P26.rna.r1")
+
+P26.rna.r1 <- subset(
+  x = P26.rna.r1,
+  subset = 
+    nCount_RNA > 6000)
+
+data_dir <- "P26_snrnaseq_r2"
+counts <- Read10X(data.dir = data_dir)
+P26_rna_r2 <- CreateSeuratObject(counts = counts, project = "P26_rna_r2")
+P26_rna_r2 <- subset(
+  x = P26_rna_r2,
+  subset = 
+    nCount_RNA > 6000)
+
+#integrate r1r2
+P26.rna <- merge(x = P26.rna.r1, y = P26_rna_r2)
+P26.rna@assays$SCT <- NULL
+DefaultAssay(P26.rna) <- 'RNA'
+
+P26.rna <- NormalizeData(P26.rna, assay = "RNA")
+P26.rna <- FindVariableFeatures(P26.rna)
+P26.rna <- ScaleData(P26.rna)
+P26.rna <- RunPCA(P26.rna)
+P26.rna <- IntegrateLayers(object = P26.rna, method = CCAIntegration, orig.reduction = "pca", new.reduction = "integrated.cca",
+                                   verbose = FALSE)
+
+# now that integration is complete, rejoin layers
+P26.rna@assays$RNA <- JoinLayers(P26.rna@assays$RNA)
+P26.rna <- FindNeighbors(P26.rna, reduction = "integrated.cca", dims = 1:50)
+P26.rna <- FindClusters(P26.rna, resolution = 0.8)
+P26.rna <- RunUMAP(P26.rna, dims = 1:50, reduction = "integrated.cca", return.model=TRUE)
+DimPlot(P26.rna, reduction = "umap", label = T, group.by = "orig.ident")
+DimPlot(P26.rna, reduction = "umap", label = T, group.by = "seurat_clusters")
+
+P26.rna.mn <- subset(P26.rna, idents = c(0,1,4,5,6, 7,8,12,15))
+# 0, 1, 4, 5, 6, 7, 8, 12, 15 = MN
+# 3, 17 = E
+# 16, 19, 20, 25 = CE
+# 10 = Pitx2-IN
+# 2 = I
+# 9, 22, 23 = VMN
+# 18, 21 = C
+# 11, 13, 14, 24 = CI
+
+P26.rna$celltype <- P26.rna$seurat_clusters
+Idents(P26.rna) <- P26.rna$celltype
+P26.rna <- RenameIdents(P26.rna, "0" = "MN", "1" = "MN", "4" = "MN", "5" = "MN", "6" = "MN", "7" = "MN", "8" = "MN", "12" = "MN", "15" = "MN", "3" = "E", "17" = "E", "16" = "CE", "19" = "CE", "20" = "CE", "25" = "CE", "10" = "Pitx2-IN", "2" = "I", "9" = "VMN", "22" = "VMN", "23" = "VMN", "18" = "C", "21" = "C", "11" = "CI", "13" = "CI", "14" = "CI", "24" = "CI")
+P26.rna$celltype <- Idents(P26.rna)
+Idents(P26.rna) <- "seurat_clusters"
+
+P26.rna.mn <- SCTransform(P26.rna.mn, verbose = T) %>% RunPCA(return.model=TRUE) %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', return.model=TRUE) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+DimPlot(P26.rna.mn, reduction = "umap.rna", label = T, group.by = "orig.ident")
+DimPlot(P26.rna.mn, reduction = "umap.rna", label = T, group.by = "seurat_clusters")
+VlnPlot(P26.rna.mn, features = "nCount_RNA")
+
+
+
+#merge without integration
+mn.allages.rna <- merge (x = E15.rna.mn, y = c(P5.rna.mn, P26.rna.mn))
+DefaultAssay(mn.allages.rna) <- 'RNA'
+mn.allages.rna[['SCT']] <- NULL
+
+mn.allages.rna <- JoinLayers(mn.allages.rna, assay = "RNA")
+mn.allages.rna <- SCTransform(mn.allages.rna, verbose = T) %>% RunPCA(return.model=TRUE) 
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T, seed.use = 5) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters")
+
+
+#plotting gene modules
+
+mn.allages.rna <- AddModuleScore(mn.allages.rna, features = list(maturegammagene.p$gene), name = "GeneSetScoreGamma")
+FeaturePlot(mn.allages.rna,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+mn.allages.rna <- AddModuleScore(mn.allages.rna, features = list(maturealphagene.p$gene), name = "GeneSetScoreAlpha")
+FeaturePlot(mn.allages.rna,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+mn.allages.rna <- AddModuleScore(mn.allages.rna, features = list(maturebetagene.p$gene), name = "GeneSetScore")
+FeaturePlot(mn.allages.rna,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
