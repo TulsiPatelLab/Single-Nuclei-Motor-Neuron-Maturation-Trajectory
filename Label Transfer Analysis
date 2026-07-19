@@ -612,5 +612,263 @@ DimPlot(p56.c.pgmn, reduction = "ref.umap", group.by = "predicted.celltype_E15.m
 as.data.frame(table(p56.c.pgmn$predicted.celltype_E15.multi.5k.pgmn_NA))
 
 
+colors = c("Lm1"="#FF0000", "Lm2"="#FE170A", "Lm3"="#FD2F15", "Lm4"="#FC4720", "Lm5"="#FB5E2B", "Lm6"="#FA7636", "Lm7"="#F98E41", "Lm8"="#F8A64C", "Lm9"="#F4AE4A", "Lm10"="#F1B749", "Lm11"="#EEBF48", "Lm12"="#EBC846", "Lm13"="#E8D045", "Lm14"="#E5D944", "Lm15"="#E2E243", "Lm16"="#D9DD4A", "L1"="#D0D851", "L2"="#C8D459", "L3"="#BFCF60", "L4"="#B7CB68", "Ll1"="#AEC66F", "Ll2"="#A6C277", "Ll3"="#A2C288", "Ll4"="#9FC299", "Ll5"="#9BC2AA", "Ll6"="#98C3BB", "Ll7"="#94C3CC", "S"="#91C3DD", "M1"="#8EC4EF", "M2"="#79A7E0", "M3"="#658CD2", "M4"="#5170C4", "M5"="#3C53B5", "M6"="#2837A7", "M7"="#141B99", "M8"= "#00008B", "M9"="#1F0B98", "P"="#3F17A5", "H1"="#5F22B3", "H2"="#7E2EC0", "H3"="#9E39CE", "H4"= "#BE45DB", "H5"="#DE51E9", "NA" = "gray0")
 
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P3_P5_P7) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P3_P5_P7,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P3_P5_P7 <- MapQuery(
+  anchorset = anchors,
+  query = P3_P5_P7,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+#DimPlot(E15_merge, label = T, label.size = 4)
+P3_P5_P7$predicted.celltype_E15_merge_NA <- P3_P5_P7$predicted.celltype_E15_merge
+P3_P5_P7$predicted.celltype_E15_merge_NA <- ifelse(P3_P5_P7$predicted.celltype_E15_merge.score > 0.6, P3_P5_P7$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P3_P5_P7, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+as.data.frame(table(P3_P5_P7$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P21_P26_P56) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P21_P26_P56,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P21_P26_P56 <- MapQuery(
+  anchorset = anchors,
+  query = P21_P26_P56,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+
+P21_P26_P56$predicted.celltype_E15_merge_NA <- P21_P26_P56$predicted.celltype_E15_merge
+P21_P26_P56$predicted.celltype_E15_merge_NA <- ifelse(P21_P26_P56$predicted.celltype_E15_merge.score > 0.6, P21_P26_P56$predicted.celltype_E15_merge_NA, "NA")
+as.data.frame(table(P21_P26_P56$predicted.celltype_E15_merge_NA))
+#DimPlot(E15_merge, label = T, label.size = 4)
+DimPlot(P21_P26_P56, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P3.multi.5k.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P3.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P3.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P3.multi.5k.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+DimPlot(E15_merge, label = T, label.size = 4)
+P3.multi.5k.mn$predicted.celltype_E15_merge_NA <- P3.multi.5k.mn$predicted.celltype_E15_merge
+P3.multi.5k.mn$predicted.celltype_E15_merge_NA <- ifelse(P3.multi.5k.mn$predicted.celltype_E15_merge.score > 0.6, P3.multi.5k.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P3.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+as.data.frame(table(P3.multi.5k.mn$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P5.rna.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P5.rna.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P5.rna.mn <- MapQuery(
+  anchorset = anchors,
+  query = P5.rna.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+DimPlot(E15_merge, label = T, label.size = 4)
+
+P5.rna.mn$predicted.celltype_E15_merge_NA <- P5.rna.mn$predicted.celltype_E15_merge
+P5.rna.mn$predicted.celltype_E15_merge_NA <- ifelse(P5.rna.mn$predicted.celltype_E15_merge.score > 0.6, P5.rna.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P5.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+as.data.frame(table(P5.rna.mn$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P7.multi.5k.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P7.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P7.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P7.multi.5k.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+#DimPlot(E15_merge, label = T, label.size = 4)
+P7.multi.5k.mn$predicted.celltype_E15_merge_NA <- P7.multi.5k.mn$predicted.celltype_E15_merge
+P7.multi.5k.mn$predicted.celltype_E15_merge_NA <- ifelse(P7.multi.5k.mn$predicted.celltype_E15_merge.score > 0.6, P7.multi.5k.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P7.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+
+as.data.frame(table(P7.multi.5k.mn$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P13.multi.5k.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P13.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P13.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P13.multi.5k.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+#DimPlot(E15_merge, label = T, label.size = 4)
+P13.multi.5k.mn$predicted.celltype_E15_merge_NA <- P13.multi.5k.mn$predicted.celltype_E15_merge
+P13.multi.5k.mn$predicted.celltype_E15_merge_NA <- ifelse(P13.multi.5k.mn$predicted.celltype_E15_merge.score > 0.6, P13.multi.5k.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P13.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+
+as.data.frame(table(P13.multi.5k.mn$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P21.multi.5k.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P21.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P21.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P21.multi.5k.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+DimPlot(E15_merge, label = T, label.size = 4)
+DimPlot(P21.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3)
+P21.multi.5k.mn$predicted.celltype_E15_merge_NA <- P21.multi.5k.mn$predicted.celltype_E15_merge
+P21.multi.5k.mn$predicted.celltype_E15_merge_NA <- ifelse(P21.multi.5k.mn$predicted.celltype_E15_merge.score > 0.6, P21.multi.5k.mn$predicted.celltype_E15_merge_NA, "NA")
+as.data.frame(table(P21.multi.5k.mn$predicted.celltype_E15_merge_NA))
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P26.rna.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P26.rna.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P26.rna.mn <- MapQuery(
+  anchorset = anchors,
+  query = P26.rna.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+DimPlot(E15_merge, label = T, label.size = 4)
+DimPlot(P26.rna.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+P26.rna.mn$predicted.celltype_E15_merge_NA <- P26.rna.mn$predicted.celltype_E15_merge
+P26.rna.mn$predicted.celltype_E15_merge_NA <- ifelse(P26.rna.mn$predicted.celltype_E15_merge.score > 0.6, P26.rna.mn$predicted.celltype_E15_merge_NA, "NA")
+as.data.frame(table(P26.rna.mn$predicted.celltype_E15_merge_NA))
+
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(P56.multi.5k.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = P56.multi.5k.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+P56.multi.5k.mn <- MapQuery(
+  anchorset = anchors,
+  query = P56.multi.5k.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+#DimPlot(E15_merge, label = T, label.size = 4)
+P56.multi.5k.mn$predicted.celltype_E15_merge_NA <- P56.multi.5k.mn$predicted.celltype_E15_merge
+P56.multi.5k.mn$predicted.celltype_E15_merge_NA <- ifelse(P56.multi.5k.mn$predicted.celltype_E15_merge.score > 0.6, P56.multi.5k.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(P56.multi.5k.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+
+as.data.frame(table(P56.multi.5k.mn$predicted.celltype_E15_merge_NA))
+
+
+Idents(E15_merge) <- "celltype"
+E15_merge$celltype_E15_merge <- Idents(E15_merge)
+DefaultAssay(p56.c.mn) <- 'SCT'
+DefaultAssay(E15_merge) <- 'SCT'
+anchors <- FindTransferAnchors(
+  reference = E15_merge,
+  query = p56.c.mn,
+  normalization.method = "SCT",
+  reference.reduction = "integrated.cca",
+  dims = 1:50
+)
+p56.c.mn <- MapQuery(
+  anchorset = anchors,
+  query = p56.c.mn,
+  reference = E15_merge,
+  reference.reduction = "integrated.cca", 
+  reduction.model = "umap",
+  refdata = list(celltype_E15_merge = "celltype_E15_merge"))
+
+#DimPlot(E15_merge, label = T, label.size = 4)
+p56.c.mn$predicted.celltype_E15_merge_NA <- p56.c.mn$predicted.celltype_E15_merge
+p56.c.mn$predicted.celltype_E15_merge_NA <- ifelse(p56.c.mn$predicted.celltype_E15_merge.score > 0.6, p56.c.mn$predicted.celltype_E15_merge_NA, "NA")
+DimPlot(p56.c.mn, reduction = "ref.umap", group.by = "predicted.celltype_E15_merge_NA", cols = colors, pt.size = 0.3) + NoLegend()
+
+as.data.frame(table(p56.c.mn$predicted.celltype_E15_merge_NA))
 
