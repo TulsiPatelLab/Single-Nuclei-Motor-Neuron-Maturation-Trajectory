@@ -1,4 +1,4 @@
-#####Processing of E15.5 multiome data. Identifying different cell types in the data, as in Figure 1d and Supplementary Figure 1. This can be repeated for all ages.
+#################Processing of E15.5 multiome data. Identifying different cell types in the data, as in Figure 1d and Supplementary Figure 1. This can be repeated for all ages.
 
 library(Seurat)
 library(Signac)
@@ -111,7 +111,7 @@ DimPlot(E15.multi.5k, cols = group_colors, reduction = "umap.rna")
 
 
 
-#####Merging motor neurons from all ages 
+######################Merging motor neurons from all ages 
 
 E15.multi.5k.mn@meta.data[["orig.ident"]] <- "E15-MNs"
 P3.multi.5k.mn@meta.data[["orig.ident"]] <- "P3-MNs"
@@ -410,7 +410,525 @@ anova_result <- pca_dist_all %>%
 # Print ANOVA result
 print(anova_result)
 
+#####################Downsampling all ages to 1154 
+
+#number of mns at each age
+#e15 mns  p3 mns  p7 mns p13 mns p21 mns p56 mns 
+#6076    1154    1547    1624    1511    1160 
+
+#colors for Dimplots
+palette_func <- colorRampPalette(c("#f8a64c","#3bd09b", "#4f80e5"))
+
+#subset all ages to 1154 mns
+# Get all cell names
+all_cells <- Cells(E15.multi.5k.mn)
+# Randomly sample 1154 cell names
+set.seed(42) # Set seed for reproducibility
+sampled_cells <- sample(all_cells, 1154)
+# Subset the Seurat object
+E15.multi.5k.mn.1154 <- subset(E15.multi.5k.mn, cells = sampled_cells)
+# Verify the number of cells in the subset
+print(length(Cells(E15.multi.5k.mn.1154)))
+#cluster 1154 cells
+E15.multi.5k.mn.1154 <- SCTransform(E15.multi.5k.mn.1154, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca") %>% RunUMAP(dims = 1:50, reduction = "pca", reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+E15.multi.5k.mn.1154$celltype <- Idents(E15.multi.5k.mn.1154)
+cols <- palette_func(17)
+DimPlot(E15.multi.5k.mn.1154, reduction = "umap.rna", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("E15")
+
+#no need to subset P3
+P3.multi.5k.mn <- SCTransform(P3.multi.5k.mn, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca",) %>% RunUMAP(dims = 1:50, reduction = "pca", reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+P3.multi.5k.mn$celltype <- Idents(P3.multi.5k.mn)
+cols <- palette_func(13)
+DimPlot(P3.multi.5k.mn, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("P3")
+
+
+# Get all cell names
+all_cells <- Cells(P7.multi.5k.mn)
+# Randomly sample 1154 cell names
+set.seed(42) # Set seed for reproducibility
+sampled_cells <- sample(all_cells, 1154)
+# Subset the Seurat object
+P7.multi.5k.mn.1154 <- subset(P7.multi.5k.mn, cells = sampled_cells)
+# Verify the number of cells in the subset
+print(length(Cells(P7.multi.5k.mn.1154)))
+#cluster 1154 cells
+P7.multi.5k.mn.1154 <- SCTransform(P7.multi.5k.mn.1154, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca") %>% RunUMAP(dims = 1:50, reduction = "pca",reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+P7.multi.5k.mn.1154$celltype <- Idents(P7.multi.5k.mn.1154)
+cols <- palette_func(11)
+DimPlot(P7.multi.5k.mn.1154, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("P7")
+
+
+
+# Get all cell names
+all_cells <- Cells(P13.multi.5k.mn)
+# Randomly sample 1154 cell names
+set.seed(15) # Set seed for reproducibility
+sampled_cells <- sample(all_cells, 1154)
+# Subset the Seurat object
+P13.multi.5k.mn.1154 <- subset(P13.multi.5k.mn, cells = sampled_cells)
+# Verify the number of cells in the subset
+print(length(Cells(P13.multi.5k.mn.1154)))
+#cluster 1154 cells
+P13.multi.5k.mn.1154 <- SCTransform(P13.multi.5k.mn.1154, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca") %>% RunUMAP(dims = 1:50, reduction = "pca",reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+P13.multi.5k.mn.1154$celltype <- Idents(P13.multi.5k.mn.1154)
+cols <- palette_func(8)
+DimPlot(P13.multi.5k.mn.1154, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("P13")
+
+
+# Get all cell names
+all_cells <- Cells(P21.multi.5k.mn)
+# Randomly sample 1154 cell names
+set.seed(42) # Set seed for reproducibility
+sampled_cells <- sample(all_cells, 1154)
+# Subset the Seurat object
+P21.multi.5k.mn.1154 <- subset(P21.multi.5k.mn, cells = sampled_cells)
+# Verify the number of cells in the subset
+print(length(Cells(P21.multi.5k.mn.1154)))
+#cluster 1154 cells
+P21.multi.5k.mn.1154 <- SCTransform(P21.multi.5k.mn.1154, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca") %>% RunUMAP(dims = 1:50, reduction = "pca",reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+P21.multi.5k.mn.1154$celltype <- Idents(P21.multi.5k.mn.1154)
+cols <- palette_func(12)
+DimPlot(P21.multi.5k.mn.1154, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("P21")
+
+
+# Get all cell names
+all_cells <- Cells(P56.multi.5k.mn)
+# Randomly sample 1154 cell names
+set.seed(42) # Set seed for reproducibility
+sampled_cells <- sample(all_cells, 1154)
+# Subset the Seurat object
+P56.multi.5k.mn.1154 <- subset(P56.multi.5k.mn, cells = sampled_cells)
+# Verify the number of cells in the subset
+print(length(Cells(P56.multi.5k.mn.1154)))
+#cluster 1154 cells
+P56.multi.5k.mn.1154 <- SCTransform(P56.multi.5k.mn.1154, verbose = T) %>% RunPCA(return.model=TRUE, reduction.name = "pca") %>% RunUMAP(dims = 1:50, reduction = "pca",reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_') %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+#P56.multi.5k.mn.1154 <- RunUMAP(P56.multi.5k.mn.1154, dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', seed.use = 10) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+P56.multi.5k.mn.1154$celltype <- Idents(P56.multi.5k.mn.1154)
+cols <- palette_func(10)
+DimPlot(P56.multi.5k.mn.1154, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 4, repel = TRUE, cols = cols) + ggtitle("P56")
+
+
+#################calculating cluster correlations at each age based on top markers genes 
+
+#E15.5
+#first get aggregate gene expression per cluster
+DefaultAssay(E15.multi.5k.mn.1154) <- 'RNA'
+E15.multi.5k.mn.1154 <- NormalizeData(E15.multi.5k.mn.1154, assay = "RNA")
+E15.multi.5k.mn.1154 <- ScaleData(E15.multi.5k.mn.1154, assay = "RNA")
+FeaturePlot(E15.multi.5k.mn.1154, features = "Foxp1")
+E15.mn.avg <- AggregateExpression(E15.multi.5k.mn.1154, assay = "RNA", slot = "data")
+E15.mn.avg <- as.data.frame(E15.mn.avg)
+fpkms <- E15.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+E15.mn.avg.sub <- E15.mn.avg[keep,] #only keep genes that are expressed in atleast one cluster
+E15.mn.avg.sub <- setDT(E15.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+DefaultAssay(E15.multi.5k.mn.1154) <- 'RNA'
+
+#then identify top 20 markers of each cluster
+table(Idents(E15.multi.5k.mn.1154))
+E15MNmarkers <- FindAllMarkers(E15.multi.5k.mn.1154, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "E15_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:16) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(E15MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(E15MNmarkers)
+tope15markers <- read.delim("E15_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+tope15markers <- as.data.frame(tope15markers$gene) %>% unique 
+E15.mn.avg.top20 <- merge(tope15markers, E15.mn.avg.sub, by.x = "tope15markers$gene", by.y = "gene", sort = F)
+d <- E15.mn.avg.top20[,2:ncol(E15.mn.avg.top20)]
+rnames <- E15.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_e15 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_e15, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_e15, file = "E15correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+#P3
+DefaultAssay(P3.multi.5k.mn) <- 'RNA'
+P3.multi.5k.mn <- NormalizeData(P3.multi.5k.mn, assay = "RNA")
+P3.multi.5k.mn <- ScaleData(P3.multi.5k.mn, assay = "RNA")
+FeaturePlot(P3.multi.5k.mn, features = "Foxp1")
+P3.mn.avg <- AggregateExpression(P3.multi.5k.mn, assay = "RNA", slot = "data")
+P3.mn.avg <- as.data.frame(P3.mn.avg)
+fpkms <- P3.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+P3.mn.avg.sub <- P3.mn.avg[keep,]
+P3.mn.avg.sub <- setDT(P3.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+
+table(Idents(P3.multi.5k.mn))
+#P3markers <- FindAllMarkers(P3.multi.5k.mn, only.pos = T, avg.pc)
+P3MNmarkers <- FindAllMarkers(P3.multi.5k.mn, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "P3_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:12) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(P3MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(P3MNmarkers)
+topP3markers <- read.delim("P3_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+topP3markers <- as.data.frame(topP3markers$gene) %>% unique 
+P3.mn.avg.top20 <- merge(topP3markers, P3.mn.avg.sub, by.x = "topP3markers$gene", by.y = "gene", sort = F)
+d <- P3.mn.avg.top20[,2:ncol(P3.mn.avg.top20)]
+rnames <- P3.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_P3 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_P3, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_P3, file = "P3correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+#P7
+DefaultAssay(P7.multi.5k.mn.1154) <- 'RNA'
+P7.multi.5k.mn.1154 <- NormalizeData(P7.multi.5k.mn.1154, assay = "RNA")
+P7.multi.5k.mn.1154 <- ScaleData(P7.multi.5k.mn.1154, assay = "RNA")
+FeaturePlot(P7.multi.5k.mn.1154, features = "Foxp1")
+P7.mn.avg <- AggregateExpression(P7.multi.5k.mn.1154, assay = "RNA", slot = "data")
+P7.mn.avg <- as.data.frame(P7.mn.avg)
+fpkms <- P7.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+P7.mn.avg.sub <- P7.mn.avg[keep,]
+P7.mn.avg.sub <- setDT(P7.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+
+
+table(Idents(P7.multi.5k.mn.1154))
+#P7markers <- FindAllMarkers(P7.multi.5k.mn.1154, only.pos = T, avg.pc)
+P7MNmarkers <- FindAllMarkers(P7.multi.5k.mn.1154, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "P7_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:10) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(P7MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(P7MNmarkers)
+topP7markers <- read.delim("P7_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+topP7markers <- as.data.frame(topP7markers$gene) %>% unique 
+P7.mn.avg.top20 <- merge(topP7markers, P7.mn.avg.sub, by.x = "topP7markers$gene", by.y = "gene", sort = F)
+d <- P7.mn.avg.top20[,2:ncol(P7.mn.avg.top20)]
+rnames <- P7.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_P7 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_P7, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_P7, file = "P7correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+#P13
+
+DefaultAssay(P13.multi.5k.mn.1154) <- 'RNA'
+P13.multi.5k.mn.1154 <- NormalizeData(P13.multi.5k.mn.1154, assay = "RNA")
+P13.multi.5k.mn.1154 <- ScaleData(P13.multi.5k.mn.1154, assay = "RNA")
+FeaturePlot(P13.multi.5k.mn.1154, features = "Foxp1")
+P13.mn.avg <- AggregateExpression(P13.multi.5k.mn.1154, assay = "RNA", slot = "data")
+P13.mn.avg <- as.data.frame(P13.mn.avg)
+fpkms <- P13.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+P13.mn.avg.sub <- P13.mn.avg[keep,]
+P13.mn.avg.sub <- setDT(P13.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+
+
+table(Idents(P13.multi.5k.mn.1154))
+#P13markers <- FindAllMarkers(P13.multi.5k.mn.1154, only.pos = T, avg.pc)
+P13MNmarkers <- FindAllMarkers(P13.multi.5k.mn.1154, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "P13_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:7) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(P13MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(P13MNmarkers)
+topP13markers <- read.delim("P13_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+topP13markers <- as.data.frame(topP13markers$gene) %>% unique 
+P13.mn.avg.top20 <- merge(topP13markers, P13.mn.avg.sub, by.x = "topP13markers$gene", by.y = "gene", sort = F)
+d <- P13.mn.avg.top20[,2:ncol(P13.mn.avg.top20)]
+rnames <- P13.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_P13 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_P13, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_P13, file = "P13correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+#P21
+DefaultAssay(P21.multi.5k.mn.1154) <- 'RNA'
+P21.multi.5k.mn.1154 <- NormalizeData(P21.multi.5k.mn.1154, assay = "RNA")
+P21.multi.5k.mn.1154 <- ScaleData(P21.multi.5k.mn.1154, assay = "RNA")
+FeaturePlot(P21.multi.5k.mn.1154, features = "Foxp1")
+P21.mn.avg <- AggregateExpression(P21.multi.5k.mn.1154, assay = "RNA", slot = "data")
+P21.mn.avg <- as.data.frame(P21.mn.avg)
+fpkms <- P21.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+P21.mn.avg.sub <- P21.mn.avg[keep,]
+P21.mn.avg.sub <- setDT(P21.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+
+
+table(Idents(P21.multi.5k.mn.1154))
+#P21markers <- FindAllMarkers(P21.multi.5k.mn.1154, only.pos = T, avg.pc)
+P21MNmarkers <- FindAllMarkers(P21.multi.5k.mn.1154, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "P21_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:11) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(P21MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(P21MNmarkers)
+topP21markers <- read.delim("P21_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+topP21markers <- as.data.frame(topP21markers$gene) %>% unique 
+P21.mn.avg.top20 <- merge(topP21markers, P21.mn.avg.sub, by.x = "topP21markers$gene", by.y = "gene", sort = F)
+d <- P21.mn.avg.top20[,2:ncol(P21.mn.avg.top20)]
+rnames <- P21.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_P21 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_P21, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_P21, file = "P21correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+
+#P56
+DefaultAssay(P56.multi.5k.mn.1154) <- 'RNA'
+P56.multi.5k.mn.1154 <- NormalizeData(P56.multi.5k.mn.1154, assay = "RNA")
+P56.multi.5k.mn.1154 <- ScaleData(P56.multi.5k.mn.1154, assay = "RNA")
+FeaturePlot(P56.multi.5k.mn.1154, features = "Foxp1")
+P56.mn.avg <- AggregateExpression(P56.multi.5k.mn.1154, assay = "RNA", slot = "data")
+P56.mn.avg <- as.data.frame(P56.mn.avg)
+fpkms <- P56.mn.avg
+keep <- rowSums(fpkms > 0.2) >= 1
+P56.mn.avg.sub <- P56.mn.avg[keep,]
+P56.mn.avg.sub <- setDT(P56.mn.avg.sub, keep.rownames = TRUE) %>% dplyr::rename(gene = rn)
+
+
+table(Idents(P56.multi.5k.mn.1154))
+#P56markers <- FindAllMarkers(P56.multi.5k.mn.1154, only.pos = T, avg.pc)
+P56MNmarkers <- FindAllMarkers(P56.multi.5k.mn.1154, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Define the output file name
+output_file <- "P56_top_20_markers_per_allcluster_1154cells.txt"
+
+for (x in 0:9) {
+  # Filter top 20 markers for the current cluster
+  y <- dplyr::filter(P56MNmarkers, cluster == x) %>% head(n = 20)
+  
+  # Write top 20 markers to the file
+  write.table(y, file = output_file, quote = F, sep = "\t", col.names = F, row.names = F, append = TRUE)
+}
+colnames <- colnames(P56MNmarkers)
+topP56markers <- read.delim("P56_top_20_markers_per_allcluster_1154cells.txt", col.names = colnames)
+topP56markers <- as.data.frame(topP56markers$gene) %>% unique 
+P56.mn.avg.top20 <- merge(topP56markers, P56.mn.avg.sub, by.x = "topP56markers$gene", by.y = "gene", sort = F)
+d <- P56.mn.avg.top20[,2:ncol(P56.mn.avg.top20)]
+rnames <- P56.mn.avg.top20[,1]
+mat_data<- data.matrix(d)
+cc_cor_P56 <- cor(mat_data, method = "pearson") 
+pheatmap(cc_cor_P56, color = colorpal, display_numbers = T, row.names = rnames)
+colorpal = colorRampPalette(c("gray97", "deepskyblue4"))(100)
+write.table(cc_cor_P56, file = "P56correlations_1154cells_top20markers_allclusters_exp.txt", sep = "\t", row.names = T)
+
+cc_cor_e15_long <- tidyr::pivot_longer(as.data.frame(cc_cor_e15), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_e15_long$age <- "E15"
+cc_cor_e15_long <- dplyr::select(cc_cor_e15_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+cc_cor_p3_long <- tidyr::pivot_longer(as.data.frame(cc_cor_P3), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_p3_long$age <- "P3"
+cc_cor_p3_long <- dplyr::select(cc_cor_p3_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+cc_cor_p7_long <- tidyr::pivot_longer(as.data.frame(cc_cor_P7), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_p7_long$age <- "P7"
+cc_cor_p7_long <- dplyr::select(cc_cor_p7_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+cc_cor_p13_long <- tidyr::pivot_longer(as.data.frame(cc_cor_P13), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_p13_long$age <- "P13"
+cc_cor_p13_long <- dplyr::select(cc_cor_p13_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+cc_cor_p21_long <- tidyr::pivot_longer(as.data.frame(cc_cor_P21), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_p21_long$age <- "P21"
+cc_cor_p21_long <- dplyr::select(cc_cor_p21_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+cc_cor_p56_long <- tidyr::pivot_longer(as.data.frame(cc_cor_P56), cols = everything(), names_to = "variable", values_to = "corr")
+cc_cor_p56_long$age <- "P56"
+cc_cor_p56_long <- dplyr::select(cc_cor_p56_long, age, corr) %>% filter(corr < 1) %>% unique #to get rid of duplicates from the matrix, confirm that the total number of correlations is correct based on number of clusters at each age
+
+corr <- rbind(cc_cor_e15_long, cc_cor_p3_long, cc_cor_p7_long, cc_cor_p13_long, cc_cor_p21_long, cc_cor_p56_long)
+write.table(corr, file = "Correlations_10x_1154cells_allages.txt", sep = "\t", quote = F, row.names = F)
+
+corr$age <- factor(corr$age, levels = c("E15", "P3", "P7", "P13", "P21", "P56"))
+p <- ggplot(corr, aes(x=age, y=corr)) +
+  geom_violin(trim = T, fill = "lightblue", alpha = 0.5) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
+  geom_jitter(shape = 16, position = position_jitter(0.2), alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Correlation MN with seed 42",
+       x = "Age",
+       y = "Pair-wise correlations between clusters")
+print(p)
+
+library(rstatix)
+# ANOVA test
+anova_result <- corr %>%
+  anova_test(corr ~ age)
+
+# Print ANOVA result
+print(anova_result)
+
+# Pairwise comparisons (if ANOVA is significant)
+pairwise_results <- corr %>%
+  pairwise_t_test(corr ~ age, p.adjust.method = "bonferroni")
+
+# Print pairwise comparisons
+print(pairwise_results)
 # Pairwise comparisons (if ANOVA is significant)
 pairwise_results <-pca_dist_all %>%
   pairwise_t_test(corr ~ age, p.adjust.method = "bonferroni")
 print(pairwise_results)
+
+##############Correlations based on PCA loading genes
+
+
+process_age_mix_cv <- function(obj, age, n_pcs = 50,
+                               resolution = 0.8, cv_cutoff = 0.75,
+                               ) {
+  
+  
+  Idents(obj) <- "seurat_clusters"
+  
+  # RNA normalization and cluster averages
+  DefaultAssay(obj) <- "RNA"
+  obj <- NormalizeData(obj, verbose = FALSE)
+  
+  avg <- AggregateExpression(
+    obj,
+    assays = "RNA",
+    group.by = "seurat_clusters",
+    slot = "data",
+    verbose = FALSE
+  )$RNA
+  
+  # PCA genes that show covariance >0.75 in clusters
+  obj <- FindVariableFeatures(obj, verbose = FALSE)
+  obj <- ScaleData(obj, features = VariableFeatures(obj), verbose = FALSE)
+  
+  obj <- RunPCA(
+    obj,
+    assay = "RNA",
+    reduction.name = "pca.rna",
+    reduction.key = "RNAPC_",
+    npcs = n_pcs,
+    verbose = FALSE
+  )
+  
+  loadings <- Loadings(obj, "pca.rna")[, 1:n_pcs, drop = FALSE]
+  
+  n_genes_per_pc <- 100
+  genes_pca <- unique(unlist(lapply(seq_len(n_pcs), function(pc) {
+    names(sort(abs(loadings[, pc]), decreasing = TRUE))[1:n_genes_per_pc]
+  })))
+  
+  #CV genes across clusters
+  gene_mean <- rowMeans(avg)
+  gene_sd <- apply(avg, 1, sd)
+  gene_cv <- gene_sd / gene_mean
+  
+  genes_cv <- names(gene_cv)[is.finite(gene_cv) & gene_cv > cv_cutoff]
+  
+  # intersect + mean expression filter
+  genes_use <- intersect(genes_pca, genes_cv)
+  genes_use <- intersect(genes_use, rownames(avg))
+  genes_use <- genes_use[gene_mean[genes_use] > 0.1]
+  
+  avg_sub <- avg[genes_use, , drop = FALSE]
+  cor_mat <- cor(as.matrix(avg_sub), method = "pearson")
+  
+  idx <- which(lower.tri(cor_mat), arr.ind = TRUE)
+  cor_long <- tibble(
+    age = age,
+    cluster1 = rownames(cor_mat)[idx[, 1]],
+    cluster2 = colnames(cor_mat)[idx[, 2]],
+    corr = cor_mat[idx]
+  )
+  
+  list(
+    obj = obj,
+    dimplot = dimplot,
+    genes_use = genes_use,
+    cor_mat = cor_mat,
+    cor_long = cor_long
+  )
+}
+
+age_list <- list(
+  E15 = E15.multi.5k.mn.1154,
+  P3  = P3.multi.5k.mn,
+  P7  = P7.multi.5k.mn.1154,
+  P13 = P13.multi.5k.mn.1154,
+  P21 = P21.multi.5k.mn.1154,
+  P56 = P56.multi.5k.mn.1154
+)
+
+results <- imap(age_list, ~process_age_mix_cv(.x, age = .y))
+
+processed_objs <- map(results, "obj")
+corr <- bind_rows(map(results, "cor_long"))
+
+corr$age <- factor(corr$age, levels = c("E15", "P3", "P7", "P13", "P21", "P56"))
+
+p <- ggplot(corr, aes(x = age, y = corr)) +
+  geom_violin(trim = TRUE, fill = "lightblue", alpha = 0.5) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.6, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 0.8) +
+  theme_minimal() +
+  labs(
+    title = "Pairwise correlations between SCT clusters using SCT PCA-loading genes",
+    x = "Age",
+    y = "Correlation"
+  )
+
+print(p)
+
+anova_result <- corr %>% anova_test(corr ~ age)
+pairwise_results <- corr %>% pairwise_t_test(corr ~ age, p.adjust.method = "bonferroni")
+
+anova_result
+pairwise_results
+
+
+#############Expression of gene modules
+
+mn.allages <- AddModuleScore(mn.allages, features = list(maturegammagene.p$gene), name = "GeneSetScoreGamma")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+
+mn.allages <- AddModuleScore(mn.allages, features = list(maturealphagene.p$gene), name = "GeneSetScoreAlpha")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+
+mn.allages <- AddModuleScore(mn.allages, features = list(maturetype3gene.p$gene), name = "GeneSetScore")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+
+mn.allages <- AddModuleScore(mn.allages, features = list(head(rownames(E15.merge.lmc.markers), 150)), name = "GeneSetScore")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+
+mn.allages <- AddModuleScore(mn.allages, features = list(head(rownames(E15.merge.mmc.markers), 150)), name = "GeneSetScore")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
+
+mn.allages <- AddModuleScore(mn.allages, features = list(head(rownames(E15.merge.hmc.markers), 150)), name = "GeneSetScore")
+FeaturePlot(mn.allages,features = "GeneSetScore1", label = F, repel = TRUE) + scale_colour_gradientn(colours = c("#40004B", "#762A83", "#9970AB", "#C2A5CF", "#E7D4E8", "gray89", "#D9F0D3", "#A6DBA0", "#5AAE61", "#1B7837", "#00441B"))
