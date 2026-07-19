@@ -1,0 +1,284 @@
+#####Processing of E15.5 multiome data. Identifying different cell types in the data, as in Figure 1d and Supplementary Figure 1. This can be repeated for all ages.
+
+library(Seurat)
+library(Signac)
+library("EnsDb.Mmusculus.v79")
+library("dplyr")
+library("ggplot2")
+library("BSgenome.Mmusculus.UCSC.mm10")
+
+
+# the 10x hdf5 file contains both data types. 
+inputdata.10x <- Read10X_h5("HT005_cellranger_arc_count_outs/filtered_feature_bc_matrix.h5")
+
+# extract RNA and ATAC data
+rna_counts <- inputdata.10x$`Gene Expression`
+atac_counts <- inputdata.10x$Peaks
+
+# Create Seurat object
+E15.multi <- CreateSeuratObject(counts = rna_counts)
+E15.multi[["percent.mt"]] <- PercentageFeatureSet(E15.multi, pattern = "^MT-")
+
+# Now add in the ATAC-seq data
+grange.counts <- StringToGRanges(rownames(atac_counts), sep = c(":", "-"))
+grange.use <- seqnames(grange.counts) %in% standardChromosomes(grange.counts)
+atac_counts <- atac_counts[as.vector(grange.use), ]
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
+seqlevelsStyle(annotations) <- 'UCSC'
+genome(annotations) <- "mm10"
+
+frag.file <- "HT005_cellranger_arc_count_outs/atac_fragments.tsv.gz"
+chrom_assay <- CreateChromatinAssay(
+  counts = atac_counts,
+  sep = c(":", "-"),
+  genome = 'mm10',
+  fragments = frag.file,
+  min.cells = 10,
+  annotation = annotations
+)
+E15.multi[["ATAC"]] <- chrom_assay
+VlnPlot(E15.multi.1k, features = c("nCount_ATAC", "nCount_RNA", "nFeature_RNA"), ncol = 3, log = TRUE, pt.size = 0.0) + NoLegend()
+
+#test different subset parameters to ensure that clustering is not influenced by low quality cells
+E15.multi.5k <- subset(
+  x = E15.multi,
+  subset = nCount_ATAC < 7e4 &
+    nCount_ATAC > 5e3 &
+    nCount_RNA < 25000 &
+    nCount_RNA > 5000 &
+    percent.mt < 20)
+
+
+VlnPlot(E15.multi.5k, features = c("nCount_ATAC", "nCount_RNA", "nFeature_RNA"), ncol = 3, log = TRUE, pt.size = 0.0) + NoLegend()
+
+
+# RNA analysis
+DefaultAssay(E15.multi.5k) <- "RNA"
+E15.multi.5k <- SCTransform(E15.multi.5k, verbose = FALSE) %>% RunPCA() %>% RunUMAP(dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_')
+
+# ATAC analysis
+# We exclude the first dimension as this is typically correlated with sequencing depth
+DefaultAssay(E15.multi.5k) <- "ATAC"
+E15.multi.5k <- RunTFIDF(E15.multi.5k)
+E15.multi.5k <- FindTopFeatures(E15.multi.5k, min.cutoff = 'q0')
+E15.multi.5k <- RunSVD(E15.multi.5k)
+E15.multi.5k <- RunUMAP(E15.multi.5k, reduction = 'lsi', dims = 2:50, reduction.name = "umap.atac", reduction.key = "atacUMAP_")
+
+#Multimodal analysis
+E15.multi.5k <- FindMultiModalNeighbors(E15.multi.5k, reduction.list = list("pca", "lsi"), dims.list = list(1:50, 2:50))
+E15.multi.5k <- RunUMAP(E15.multi.5k, nn.name = "weighted.nn", reduction.name = "wnn.umap", reduction.key = "wnnUMAP_")
+E15.multi.5k <- FindClusters(E15.multi.5k, graph.name = "wsnn", algorithm = 3, verbose = FALSE)
+E15.multi.5k$celltype <- Idents(E15.multi.5k)
+p1 <- DimPlot(E15.multi.5k, reduction = "umap.rna", group.by = "celltype", label = TRUE, label.size = 2.5, repel = TRUE) + ggtitle("RNA")
+p2 <- DimPlot(E15.multi.5k, reduction = "umap.atac", group.by = "celltype", label = TRUE, label.size = 2.5, repel = TRUE) + ggtitle("ATAC")
+p3 <- DimPlot(E15.multi.5k, reduction = "wnn.umap", group.by = "celltype", label = TRUE, label.size = 2.5, repel = TRUE) + ggtitle("WNN")
+p1 + p2 + p3 & NoLegend() & theme(plot.title = element_text(hjust = 0.5))
+
+DefaultAssay(E15.multi.5k) <- 'RNA'
+FeaturePlot(E15.multi.5k, features = c("Gad1", "Slc17a6", "Chat", "Slc5a7"), reduction = "umap.rna")
+FeaturePlot(E15.multi.5k, features = c("Tns1", "Bcl6", "Ret", "Gfra1", "Rbfox1", "Zeb2", "Nos1", "Pitx2"), reduction = "umap.rna")
+VlnPlot(E15.multi.5k, features = c("Tns1", "Bcl6", "Ret", "Gfra1"))
+
+#subset Celltypes based on marker expression. First, a combination of FeaturePlot and VlnPlot are used to determine which clusters express Chat, Slc17a6, and Gad1. Then, Chat+ clusters are given SMN identity based on expression of Slc5a7, Bcl6, Ret, Gfra1, and Tns1. Chat+ clusters were given PGMN identity based on expression of Slc5a7, Fbn2, and Zbn2. Chat+ clusters were given PItx2-IN identity if they expressed Slc5a7 and Pitx2. 
+Idents(E15.multi.5k) <- "seurat_clusters"
+E15.multi.5k.pgmn <- subset(E15.multi.5k, idents = c(11,3,2,18))
+E15.multi.5k.in <- subset(E15.multi.5k, idents = c(41))
+E15.multi.5k.mn <- subset(E15.multi.5k, ident = c(1,4,5,6,7,8,9,10,12,13,14,15,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,38,39,40,42,44,45,46,47,48))
+E15.multi.5k.e <- subset(E15.multi.5k, idents = 43)
+E15.multi.5k.ce <- subset(E15.multi.5k, idents = 0)
+E15.multi.5k.c <- subset(E15.multi.5k, idents = c(37))
+# Extract cell IDs from multiple subsets
+pgmn_cell_ids <- colnames(E15.multi.5k.pgmn)
+mn_cell_ids <- colnames(E15.multi.5k.mn)
+e_cell_ids <- colnames(E15.multi.5k.e)
+ce_cell_ids <- colnames(E15.multi.5k.ce)
+in_cell_ids <- colnames(E15.multi.5k.in)
+c_cell_ids <- colnames(E15.multi.5k.c)
+
+# Create a new metadata column with labels for pgmn, Chol, and Other
+E15.multi.5k$cell_group_E15 <- "Other"  # Default to "Other"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% pgmn_cell_ids] <- "PGMN"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% mn_cell_ids] <- "MN"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% in_cell_ids] <- "Pitx2-IN"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% e_cell_ids] <- "E"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% ce_cell_ids] <- "CE"
+E15.multi.5k$cell_group_E15[colnames(E15.multi.5k) %in% c_cell_ids] <- "C"
+
+group_colors <- c("VMN" = "#a0d399" , "MN" = "#5c9285" , "Pitx2-IN" = "#f9a2b1" , "C" = "#b173f9", "CI" = "#e2e243", "I" = "#a37e6e", "CE" = "#95b2e5", "E" = "#4f80e5", "IE" = "#73eff9", "CEI" = "gray50", "Other" = "gray50", "NA" = "gray9")
+
+DimPlot(E15.multi.5k, cols = group_colors, reduction = "umap.rna") 
+#####Repeat above for all ages
+
+
+
+#####Merging motor neurons from all ages 
+
+E15.multi.5k.mn@meta.data[["orig.ident"]] <- "E15-MNs"
+P3.multi.5k.mn@meta.data[["orig.ident"]] <- "P3-MNs"
+P7.multi.5k.mn@meta.data[["orig.ident"]] <- "P7-MNs"
+P13.multi.5k.mn@meta.data[["orig.ident"]] <- "P13-MNs"
+P21.multi.5k.mn@meta.data[["orig.ident"]] <- "P21-MNs"
+P56.multi.5k.mn@meta.data[["orig.ident"]] <- "P56-MNs"
+
+#remove unnecessary assays to speed up merge
+DefaultAssay(E15.multi.5k.chol.mn) <- 'RNA'
+E15.multi.5k.chol.mn[['SCT']] <- NULL
+E15.multi.5k.chol.mn[['peaks']] <- NULL
+E15.multi.5k.chol.mn[['umap.rna']] <- NULL
+E15.multi.5k.chol.mn[['umap.atac']] <- NULL
+E15.multi.5k.chol.mn[['wnn.umap']] <- NULL
+E15.multi.5k.chol.mn[['pca']] <- NULL
+E15.multi.5k.chol.mn[['lsi']] <- NULL
+
+DefaultAssay(P4.multi.5k.chol.mn) <- 'RNA'
+P4.multi.5k.chol.mn[['SCT']] <- NULL
+P4.multi.5k.chol.mn[['peaks']] <- NULL
+P4.multi.5k.chol.mn[['umap.rna']] <- NULL
+P4.multi.5k.chol.mn[['umap.atac']] <- NULL
+P4.multi.5k.chol.mn[['wnn.umap']] <- NULL
+P4.multi.5k.chol.mn[['pca']] <- NULL
+P4.multi.5k.chol.mn[['lsi']] <- NULL
+
+DefaultAssay(P7.multi.5k.chol.mn) <- 'RNA'
+P7.multi.5k.chol.mn[['SCT']] <- NULL
+P7.multi.5k.chol.mn[['peaks']] <- NULL
+P7.multi.5k.chol.mn[['umap.rna']] <- NULL
+P7.multi.5k.chol.mn[['umap.atac']] <- NULL
+P7.multi.5k.chol.mn[['wnn.umap']] <- NULL
+P7.multi.5k.chol.mn[['pca']] <- NULL
+P7.multi.5k.chol.mn[['lsi']] <- NULL
+
+DefaultAssay(P13.multi.5k.chol.mn) <- 'RNA'
+P13.multi.5k.chol.mn[['SCT']] <- NULL
+P13.multi.5k.chol.mn[['peaks']] <- NULL
+P13.multi.5k.chol.mn[['umap.rna']] <- NULL
+P13.multi.5k.chol.mn[['umap.atac']] <- NULL
+P13.multi.5k.chol.mn[['wnn.umap']] <- NULL
+P13.multi.5k.chol.mn[['pca']] <- NULL
+P13.multi.5k.chol.mn[['lsi']] <- NULL
+
+DefaultAssay(P21.multi.5k.chol.mn) <- 'RNA'
+P21.multi.5k.chol.mn[['SCT']] <- NULL
+P21.multi.5k.chol.mn[['peaks']] <- NULL
+P21.multi.5k.chol.mn[['umap.rna']] <- NULL
+P21.multi.5k.chol.mn[['umap.atac']] <- NULL
+P21.multi.5k.chol.mn[['wnn.umap']] <- NULL
+P21.multi.5k.chol.mn[['pca']] <- NULL
+P21.multi.5k.chol.mn[['lsi']] <- NULL
+
+DefaultAssay(P56.multi.5k.chol.mn) <- 'RNA'
+P56.multi.5k.chol.mn[['SCT']] <- NULL
+P56.multi.5k.chol.mn[['peaks']] <- NULL
+P56.multi.5k.chol.mn[['umap.rna']] <- NULL
+P56.multi.5k.chol.mn[['umap.atac']] <- NULL
+P56.multi.5k.chol.mn[['wnn.umap']] <- NULL
+P56.multi.5k.chol.mn[['pca']] <- NULL
+P56.multi.5k.chol.mn[['lsi']] <- NULL
+
+mn.allages <- merge(x= E15.multi.5k.mn, y = c(P3.multi.5k.mn, P7.multi.5k.mn, P13.multi.5k.mn, P21.multi.5k.mn, P56.multi.5k.mn))
+mn.allages <- JoinLayers(mn.allages, assay = "RNA")
+mn.allages <- SCTransform(mn.allages, verbose = T) %>% RunPCA()
+#tested various dims and resolutions as in Supplementary Figure 2
+mn.allages <- RunUMAP(mn.allages, dims = 1:50, reduction.name = 'umap.rna', reduction.key = 'rnaUMAP_', seed.use = 18) %>% FindNeighbors(reduction = "pca", dims = 1:50, verbose = T) %>% FindClusters(resolution = 0.8, verbose =T)
+
+palette_func <- colorRampPalette(c("#b075eb","indianred1", "darkgreen","#5bfee4","#d4ba6a", "darkblue"))
+colors <- palette_func(49)
+cols <- c( "#8ec4ef","#e2e243","#a6c277", "#a37e6e", "#5c9285","#de51e9")
+p1 <- DimPlot(mn.allages, cols = colors, group.by = "seurat_clusters", label = T) + ggtitle("mn all ages Seurat Clusters")
+p2 <- DimPlot(mn.allages, cols = cols, group.by = "orig.ident", label = T) + ggtitle("mn all ages")
+p1 | p2
+
+# looking at gene expression across ages
+DefaultAssay(mn.allages) <- 'RNA'
+mn.allages <- NormalizeData(mn.allages, normalization.method = "LogNormalize", scale.factor = 10000)
+FeaturePlot(mn.allages, features = c("Chodl", "Rora", "Klhl1", "Foxp1", "Mecom")) 
+
+
+# alpha, gamma, type3 genesets
+DefaultAssay(mn.allages) <- 'RNA'
+maturegammagene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(4, 11, 25), ident.2 = c(9, 0, 32), min.pct = 0.25, logfc.threshold = 0.25)
+maturealphagene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(9), ident.2 = c(0, 32, 4, 11, 25), min.pct = 0.25, logfc.threshold = 0.25)
+maturetype3gene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(0, 32), ident.2 = c(9, 4, 11, 25), min.pct = 0.25, logfc.threshold = 0.25)
+
+maturealphagene.p <- mutate(maturealphagene, pct.diff = pct.1 - pct.2) %>% dplyr::filter(avg_log2FC >=1.4, pct.diff > 0.2, p_val_adj < 0.001)  #143
+maturegammagene.p <- mutate(maturegammagene, pct.diff = pct.1 - pct.2) %>% dplyr::filter(avg_log2FC >=1.4, pct.diff > 0.2, p_val_adj < 0.001)  #100
+maturetype3gene.p <- mutate(maturetype3gene, pct.diff = pct.1 - pct.2) %>% dplyr::filter(avg_log2FC >=1.4, pct.diff > 0.2, p_val_adj < 0.001)  #54
+
+
+# calling peaks and processing ATAC data
+library(chromVAR)
+library(JASPAR2020)
+library(TFBSTools)
+library(motifmatchr)
+library(BSgenome.Mmusculus.UCSC.mm10)
+
+#calling peaks in combined object
+DefaultAssay(mn.allages) <- 'ATAC'
+peaks <- CallPeaks(mn.allages, group.by = "seurat_clusters", macs2.path = "/Users/tulsipatel/miniconda3/envs/snseq/bin/macs2")
+# remove peaks on nonstandard chromosomes and in genomic blacklist regions
+peaks <- keepStandardChromosomes(peaks, pruning.mode = "coarse")
+peaks <- subsetByOverlaps(x = peaks, ranges = blacklist_mm10, invert = TRUE)
+
+# quantify counts in each peak
+macs2_counts <- FeatureMatrix(
+  fragments = Fragments(mn.allages),
+  features = peaks,
+  cells = colnames(mn.allages)
+)
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
+seqlevelsStyle(annotations) <- 'UCSC'
+genome(annotations) <- "mm10"
+# create a new assay using the MACS2 peak set and add it to the Seurat object
+mn.allages[["peaks"]] <- CreateChromatinAssay(
+  counts = macs2_counts,
+  annotation = annotations,
+  fragments = Fragments(mn.allages)
+)
+mn.allages <- RegionStats(mn.allages, genome = BSgenome.Mmusculus.UCSC.mm10, assay = "peaks")
+
+# differential peak analysis
+DefaultAssay(mn.allages) <- 'peaks'
+maturegammagene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(4, 11, 25), ident.2 = c(9, 0, 32), min.pct = 0.25, logfc.threshold = 0.25)
+maturealphagene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(9), ident.2 = c(0, 32, 4, 11, 25), min.pct = 0.25, logfc.threshold = 0.25)
+maturetype3gene <- FindMarkers(mn.allages, only.pos = TRUE, ident.1 = c(0, 32), ident.2 = c(9, 4, 11, 25), min.pct = 0.25, logfc.threshold = 0.25)
+
+maturegammapeak.p <- filter(maturegammapeak, avg_log2FC > 1, p_val_adj <0.001) #4189
+maturetype3peak.p <- filter(maturetype3peak, avg_log2FC > 1, p_val_adj <0.001) #2390
+maturealphapeak.p <- filter(maturealphapeak, avg_log2FC > 1, p_val_adj <0.001) #2987
+
+#motif analysis
+library(Signac)
+library(Seurat)
+library(JASPAR2020)
+library(TFBSTools)
+library(BSgenome.Mmusculus.UCSC.mm10)
+library(patchwork)
+
+# Get a list of motif position frequency matrices from the JASPAR database
+pfm <- getMatrixSet(
+  x = JASPAR2020,
+  opts = list(collection = "CORE", tax_group = 'vertebrates', all_versions = FALSE)
+)
+
+# add motif information
+mn.allages <- AddMotifs(
+  object = mn.allages,
+  genome = BSgenome.Mmusculus.UCSC.mm10,
+  pfm = pfm
+)
+
+#identify motifs enriched in alpha, gamma, and type3 peaks
+mature.a.motifs <- FindMotifs(
+  object = mn.allages,
+  features = maturealphapeak.p$peak
+)
+
+mature.b.motifs <- FindMotifs(
+  object = mn.allages,
+  features = maturetype3peak.p$peak
+)
+
+mature.g.motifs <- FindMotifs(
+  object = mn.allages,
+  features = maturegammapeak.p$peak
+)
