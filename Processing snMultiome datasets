@@ -120,61 +120,67 @@ P13.multi.5k.mn@meta.data[["orig.ident"]] <- "P13-MNs"
 P21.multi.5k.mn@meta.data[["orig.ident"]] <- "P21-MNs"
 P56.multi.5k.mn@meta.data[["orig.ident"]] <- "P56-MNs"
 
-#remove unnecessary assays to speed up merge
-DefaultAssay(E15.multi.5k.chol.mn) <- 'RNA'
-E15.multi.5k.chol.mn[['SCT']] <- NULL
-E15.multi.5k.chol.mn[['peaks']] <- NULL
-E15.multi.5k.chol.mn[['umap.rna']] <- NULL
-E15.multi.5k.chol.mn[['umap.atac']] <- NULL
-E15.multi.5k.chol.mn[['wnn.umap']] <- NULL
-E15.multi.5k.chol.mn[['pca']] <- NULL
-E15.multi.5k.chol.mn[['lsi']] <- NULL
+E15.multi.5k.mn@meta.data[["orig.ident"]] <- "E15-MNs"
+P3.multi.5k.mn@meta.data[["orig.ident"]] <- "P3-MNs"
+P7.multi.5k.mn@meta.data[["orig.ident"]] <- "P7-MNs"
+P13.multi.5k.mn@meta.data[["orig.ident"]] <- "P13-MNs"
+P21.multi.5k.mn@meta.data[["orig.ident"]] <- "P21-MNs"
+P56.multi.5k.mn@meta.data[["orig.ident"]] <- "P56-MNs"
 
-DefaultAssay(P4.multi.5k.chol.mn) <- 'RNA'
-P4.multi.5k.chol.mn[['SCT']] <- NULL
-P4.multi.5k.chol.mn[['peaks']] <- NULL
-P4.multi.5k.chol.mn[['umap.rna']] <- NULL
-P4.multi.5k.chol.mn[['umap.atac']] <- NULL
-P4.multi.5k.chol.mn[['wnn.umap']] <- NULL
-P4.multi.5k.chol.mn[['pca']] <- NULL
-P4.multi.5k.chol.mn[['lsi']] <- NULL
+#remove unnecessary before merge
+DefaultAssay(E15.multi.5k.mn) <- 'RNA'
+E15.multi.5k.mn[['SCT']] <- NULL
+E15.multi.5k.mn[['peaks']] <- NULL
+E15.multi.5k.mn[['umap.rna']] <- NULL
+E15.multi.5k.mn[['umap.atac']] <- NULL
+E15.multi.5k.mn[['wnn.umap']] <- NULL
+E15.multi.5k.mn[['pca']] <- NULL
+E15.multi.5k.mn[['lsi']] <- NULL
 
-DefaultAssay(P7.multi.5k.chol.mn) <- 'RNA'
-P7.multi.5k.chol.mn[['SCT']] <- NULL
-P7.multi.5k.chol.mn[['peaks']] <- NULL
-P7.multi.5k.chol.mn[['umap.rna']] <- NULL
-P7.multi.5k.chol.mn[['umap.atac']] <- NULL
-P7.multi.5k.chol.mn[['wnn.umap']] <- NULL
-P7.multi.5k.chol.mn[['pca']] <- NULL
-P7.multi.5k.chol.mn[['lsi']] <- NULL
+DefaultAssay(P4.multi.5k.mn) <- 'RNA'
+P4.multi.5k.mn[['SCT']] <- NULL
+P4.multi.5k.mn[['peaks']] <- NULL
+P4.multi.5k.mn[['umap.rna']] <- NULL
+P4.multi.5k.mn[['umap.atac']] <- NULL
+P4.multi.5k.mn[['wnn.umap']] <- NULL
+P4.multi.5k.mn[['pca']] <- NULL
+P4.multi.5k.mn[['lsi']] <- NULL
 
-DefaultAssay(P13.multi.5k.chol.mn) <- 'RNA'
-P13.multi.5k.chol.mn[['SCT']] <- NULL
-P13.multi.5k.chol.mn[['peaks']] <- NULL
-P13.multi.5k.chol.mn[['umap.rna']] <- NULL
-P13.multi.5k.chol.mn[['umap.atac']] <- NULL
-P13.multi.5k.chol.mn[['wnn.umap']] <- NULL
-P13.multi.5k.chol.mn[['pca']] <- NULL
-P13.multi.5k.chol.mn[['lsi']] <- NULL
+DefaultAssay(P7.multi.5k.mn) <- 'RNA'
+P7.multi.5k.mn[['SCT']] <- NULL
+P7.multi.5k.mn[['peaks']] <- NULL
+P7.multi.5k.mn[['umap.rna']] <- NULL
+P7.multi.5k.mn[['umap.atac']] <- NULL
+P7.multi.5k.mn[['wnn.umap']] <- NULL
+P7.multi.5k.mn[['pca']] <- NULL
+P7.multi.5k.mn[['lsi']] <- NULL
 
-DefaultAssay(P21.multi.5k.chol.mn) <- 'RNA'
-P21.multi.5k.chol.mn[['SCT']] <- NULL
-P21.multi.5k.chol.mn[['peaks']] <- NULL
-P21.multi.5k.chol.mn[['umap.rna']] <- NULL
-P21.multi.5k.chol.mn[['umap.atac']] <- NULL
-P21.multi.5k.chol.mn[['wnn.umap']] <- NULL
-P21.multi.5k.chol.mn[['pca']] <- NULL
-P21.multi.5k.chol.mn[['lsi']] <- NULL
+DefaultAssay(P13.multi.5k.mn) <- 'RNA'
+P13.multi.5k.mn[['SCT']] <- NULL
+P13.multi.5k.mn[['peaks']] <- NULL
+P13.multi.5k.mn[['umap.rna']] <- NULL
+P13.multi.5k.mn[['umap.atac']] <- NULL
+P13.multi.5k.mn[['wnn.umap']] <- NULL
+P13.multi.5k.mn[['pca']] <- NULL
+P13.multi.5k.mn[['lsi']] <- NULL
 
-DefaultAssay(P56.multi.5k.chol.mn) <- 'RNA'
-P56.multi.5k.chol.mn[['SCT']] <- NULL
-P56.multi.5k.chol.mn[['peaks']] <- NULL
-P56.multi.5k.chol.mn[['umap.rna']] <- NULL
-P56.multi.5k.chol.mn[['umap.atac']] <- NULL
-P56.multi.5k.chol.mn[['wnn.umap']] <- NULL
-P56.multi.5k.chol.mn[['pca']] <- NULL
-P56.multi.5k.chol.mn[['lsi']] <- NULL
+DefaultAssay(P21.multi.5k.mn) <- 'RNA'
+P21.multi.5k.mn[['SCT']] <- NULL
+P21.multi.5k.mn[['peaks']] <- NULL
+P21.multi.5k.mn[['umap.rna']] <- NULL
+P21.multi.5k.mn[['umap.atac']] <- NULL
+P21.multi.5k.mn[['wnn.umap']] <- NULL
+P21.multi.5k.mn[['pca']] <- NULL
+P21.multi.5k.mn[['lsi']] <- NULL
 
+DefaultAssay(P56.multi.5k.mn) <- 'RNA'
+P56.multi.5k.mn[['SCT']] <- NULL
+P56.multi.5k.mn[['peaks']] <- NULL
+P56.multi.5k.mn[['umap.rna']] <- NULL
+P56.multi.5k.mn[['umap.atac']] <- NULL
+P56.multi.5k.mn[['wnn.umap']] <- NULL
+P56.multi.5k.mn[['pca']] <- NULL
+P56.multi.5k.mn[['lsi']] <- NULL
 mn.allages <- merge(x= E15.multi.5k.mn, y = c(P3.multi.5k.mn, P7.multi.5k.mn, P13.multi.5k.mn, P21.multi.5k.mn, P56.multi.5k.mn))
 mn.allages <- JoinLayers(mn.allages, assay = "RNA")
 mn.allages <- SCTransform(mn.allages, verbose = T) %>% RunPCA()
