@@ -1,0 +1,830 @@
+
+#######Testing clustering paramenters
+
+#snMultiome all ages motor neurons
+
+mn.allages <- RunPCA(mn.allages, return.model=TRUE, npcs = 100, reduction.name = "pca")
+
+
+#resolution 0.8
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.8 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.8, file = "mnallages_clusters_pc30.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.8 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.8, file = "mnallages_clusters_pc50.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <-RunUMAP(mn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.8 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.8, file = "mnallages_clusters_pc100.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+#resolution 0.3
+
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.3 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.3, file = "mnallages_clusters_pc30.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.3 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.3, file = "mnallages_clusters_pc50.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <-RunUMAP(mn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.3 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.3, file = "mnallages_clusters_pc100.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+#resolution 0.5
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.5 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.5, file = "mnallages_clusters_pc30.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.5 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.5, file = "mnallages_clusters_pc50.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <-RunUMAP(mn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.5 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.5, file = "mnallages_clusters_pc100.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+#resolution 1
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 1.0 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 1.0 res")
+pc30.res1.0 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res1.0, file = "mnallages_clusters_pc30.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <- RunUMAP(mn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 1.0 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 1.0 res")
+pc50.res1.0 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res1.0, file = "mnallages_clusters_pc50.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages <-RunUMAP(mn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(mn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+#DimPlot(mn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res1.0 <- as.data.frame(table(mn.allages$seurat_clusters, mn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res1.0, file = "mnallages_clusters_pc100.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(scales)
+
+
+palette_func <- colorRampPalette(c("#b075eb","indianred1", "darkgreen","#5bfee4","#d4ba6a", "darkblue"))
+
+age_order <- c("e15 mns", "p3 mns", "p7 mns", "p13 mns", "p21 mns", "p56 mns")
+
+make_100pct_barplot <- function(tab, plot_title = "", age_order = NULL) {
+       
+         long <- tab %>%
+               rename(cluster = Var1) %>%
+               pivot_longer(
+                     cols = -cluster,
+                     names_to = "age",
+                     values_to = "n"
+                 ) %>%
+              mutate(
+                     cluster = factor(cluster),
+                     age = factor(age, levels = if (is.null(age_order)) unique(age) else age_order)
+                 )
+        
+           n_clusters <- nlevels(long$cluster)
+           cluster_cols <- palette_func(n_clusters)
+          
+             ggplot(long, aes(x = age, y = n, fill = cluster)) + 
+                 geom_col(position = "fill") +
+                 scale_fill_manual(values = cluster_cols) +
+                 labs(
+                       title = plot_title,
+                       x = NULL,
+                       y = "Proportion of cells"
+                  ) +
+               theme_classic()
+      }
+
+tables <- list(
+  "pc30_res0.3" = pc30.res0.3,
+  "pc30_res0.5" = pc30.res0.5,
+  "pc30_res0.8" = pc30.res0.8,
+  "pc30_res1.0" = pc30.res1.0,
+  "pc50_res0.3" = pc50.res0.3,
+  "pc50_res0.5" = pc50.res0.5,
+  "pc50_res0.8" = pc50.res0.8,
+  "pc50_res1.0" = pc50.res1.0,
+  "pc100_res0.3" = pc100.res0.3,
+  "pc100_res0.5" = pc100.res0.5,
+  "pc100_res0.8" = pc100.res0.8,
+  "pc100_res1.0" = pc100.res1.0
+)
+
+plots <- imap(tables, ~make_100pct_barplot(.x, .y, age_order))
+
+wrap_plots(plots, ncol = 4)
+
+#snRNA-seq all ages motor neurons
+
+mn.allages.rna <- RunPCA(mn.allages.rna, return.model=TRUE, npcs = 100, reduction.name = "pca")
+
+#resolution = 0.8
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+newpc30.res0.8 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc30.res0.8, file = "pipseqallages_clusters_pc30.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+newpc50.res0.8 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc50.res0.8, file = "pipseqallages_clusters_pc50.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <-RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+newpc100.res0.8 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc100.res0.8, file = "pipseqallages_clusters_pc100.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+#resolution 0.3
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+newpc30.res0.3 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc30.res0.3, file = "pipseqallages_clusters_pc30.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+newpc50.res0.3 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc50.res0.3, file = "pipseqallages_clusters_pc50.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <-RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+newpc100.res0.3 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc100.res0.3, file = "pipseqallages_clusters_pc100.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+#resolution 0.5
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+newpc30.res0.5 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc30.res0.5, file = "pipseqallages_clusters_pc30.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+newpc50.res0.5 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc50.res0.5, file = "pipseqallages_clusters_pc50.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <-RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+newpc100.res0.5 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc100.res0.5, file = "pipseqallages_clusters_pc100.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+#resolution 1.0
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+newpc30.res1.0 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc30.res1.0, file = "pipseqallages_clusters_pc30.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <- RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+newpc50.res1.0 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc50.res1.0, file = "pipseqallages_clusters_pc50.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+mn.allages.rna <-RunUMAP(mn.allages.rna, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+DimPlot(mn.allages.rna, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(mn.allages.rna, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+newpc100.res1.0 <- as.data.frame(table(mn.allages.rna$seurat_clusters, mn.allages.rna$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(newpc100.res1.0, file = "pipseqallages_clusters_pc100.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(scales)
+
+
+palette_func <- colorRampPalette(c("#b075eb","indianred1", "darkgreen","#5bfee4","#d4ba6a", "darkblue"))
+
+age_order <- c("e15 mns", "p3 mns", "p7 mns", "p13 mns", "p21 mns", "p56 mns")
+
+make_100pct_barplot <- function(tab, plot_title = "", age_order = NULL) {
+       
+         long <- tab %>%
+               rename(cluster = Var1) %>%
+               pivot_longer(
+                     cols = -cluster,
+                     names_to = "age",
+                     values_to = "n"
+                 ) %>%
+              mutate(
+                     cluster = factor(cluster),
+                     age = factor(age, levels = if (is.null(age_order)) unique(age) else age_order)
+                 )
+        
+           n_clusters <- nlevels(long$cluster)
+           cluster_cols <- palette_func(n_clusters)
+          
+             ggplot(long, aes(x = age, y = n, fill = cluster)) + 
+                 geom_col(position = "fill") +
+                 scale_fill_manual(values = cluster_cols) +
+                 labs(
+                       title = plot_title,
+                       x = NULL,
+                       y = "Proportion of cells"
+                  ) +
+               theme_classic()
+      }
+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(purrr)
+
+palette_func <- colorRampPalette(c("#b075eb","indianred1","darkgreen","#5bfee4","#d4ba6a","darkblue"))
+age_order <- c("E15", "P5", "P26")
+
+make_100pct_barplot <- function(tab, plot_title = "", age_order = NULL) {
+  
+  long <- tab %>%
+    rename(cluster = Var1) %>%
+    pivot_longer(
+      cols = -cluster,
+      names_to = "age",
+      values_to = "n"
+    ) %>%
+    mutate(
+      cluster = factor(cluster),
+      age = factor(age, levels = if (is.null(age_order)) unique(age) else age_order)
+    ) %>%
+    group_by(age) %>%
+    mutate(
+      prop = n / sum(n)
+    ) %>%
+    arrange(age, desc(prop), .by_group = TRUE) %>%
+    mutate(
+      ymax = cumsum(prop),
+      ymin = lag(ymax, default = 0),
+      xnum = as.numeric(age)
+    ) %>%
+    ungroup()
+  
+  n_clusters <- nlevels(long$cluster)
+  cluster_cols <- palette_func(n_clusters)
+  names(cluster_cols) <- levels(long$cluster)
+  
+  ggplot(long) +
+    geom_rect(
+      aes(
+        xmin = xnum - 0.45,
+        xmax = xnum + 0.45,
+        ymin = ymin,
+        ymax = ymax,
+        fill = cluster
+      ),
+      color = "white",
+      linewidth = 0.2
+    ) +
+    scale_fill_manual(values = cluster_cols) +
+    scale_x_continuous(
+      breaks = seq_along(levels(long$age)),
+      labels = levels(long$age)
+    ) +
+    labs(
+      title = plot_title,
+      x = NULL,
+      y = "Proportion of cells"
+    ) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+
+tables <- list(
+  "pc30_res0.3" = newpc30.res0.3,
+  "pc30_res0.5" = newpc30.res0.5,
+  "pc30_res0.8" = newpc30.res0.8,
+  "pc30_res1.0" = newpc30.res1.0,
+  "pc50_res0.3" = newpc50.res0.3,
+  "pc50_res0.5" = newpc50.res0.5,
+  "pc50_res0.8" = newpc50.res0.8,
+  "pc50_res1.0" = newpc50.res1.0,
+  "pc100_res0.3" = newpc100.res0.3,
+  "pc100_res0.5" = newpc100.res0.5,
+  "pc100_res0.8" = newpc100.res0.8,
+  "pc100_res1.0" = newpc100.res1.0
+)
+
+
+plots <- imap(tables, ~make_100pct_barplot(.x, .y, age_order))
+
+wrap_plots(plots, ncol = 4)
+
+
+##snMultiome all ages preganglionic motor neurons
+
+
+pgmn.allages <- RunPCA(pgmn.allages, return.model=TRUE, npcs = 100, reduction.name = "pca")
+
+# resolution 0.8
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.8 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.8, file = "mnallages_clusters_pc30.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.8 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.8, file = "mnallages_clusters_pc50.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+
+pgmn.allages <-RunUMAP(pgmn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.8, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.8 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.8, file = "mnallages_clusters_pc100.res0.8.txt", sep = "\t", quote = F, row.names = F )
+
+#resolution 0.3
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.3 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.3, file = "mnallages_clusters_pc30.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.3 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.3, file = "mnallages_clusters_pc50.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+
+pgmn.allages <-RunUMAP(pgmn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.3, verbose = FALSE)
+DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.3 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.3, file = "mnallages_clusters_pc100.res0.3.txt", sep = "\t", quote = F, row.names = F )
+
+#resolution 0.5
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 0.8 res")
+pc30.res0.5 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res0.5, file = "mnallages_clusters_pc30.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 0.8 res")
+pc50.res0.5 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res0.5, file = "mnallages_clusters_pc50.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+pgmn.allages <-RunUMAP(pgmn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 0.5, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res0.5 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res0.5, file = "mnallages_clusters_pc100.res0.5.txt", sep = "\t", quote = F, row.names = F )
+
+
+#resolution 1
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:30, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:30, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("30 PCs, 1.0 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("30 PCs, 1.0 res")
+pc30.res1.0 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc30.res1.0, file = "mnallages_clusters_pc30.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+
+pgmn.allages <- RunUMAP(pgmn.allages, reduction = "pca", dims = 1:50, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:50, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("50 PCs, 1.0 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("50 PCs, 1.0 res")
+pc50.res1.0 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc50.res1.0, file = "mnallages_clusters_pc50.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+pgmn.allages <-RunUMAP(pgmn.allages, reduction = "pca", dims = 1:100, verbose = FALSE, return.model = T) %>%
+  FindNeighbors(reduction = "pca", dims = 1:100, verbose = FALSE) %>%
+  FindClusters(resolution = 1.0, verbose = FALSE)
+#DimPlot(pgmn.allages, label = F, group.by = "orig.ident", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+#DimPlot(pgmn.allages, label = T, group.by = "seurat_clusters", reduction = "umap") + ggtitle("100 PCs, 1.5 res")
+pc100.res1.0 <- as.data.frame(table(pgmn.allages$seurat_clusters, pgmn.allages$orig.ident))%>%
+  pivot_wider(
+    names_from = Var2,
+    values_from = Freq,
+    values_fill = 0
+  )
+write.table(pc100.res1.0, file = "mnallages_clusters_pc100.res1.0.txt", sep = "\t", quote = F, row.names = F )
+
+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(purrr)
+
+palette_func <- colorRampPalette(c("red", "#f8a64c","#e2e243","#a6c277", "#8ec4ef","darkblue", "#de51e9"))
+age_order <- c("e15 pgmns", "p3 pgmns", "p7 pgmns", "p13 pgmns", "p21 pgmns", "p56 pgmns")
+
+
+make_100pct_barplot <- function(tab, plot_title = "", age_order = NULL) {
+  
+  long <- tab %>%
+    rename(cluster = Var1) %>%
+    pivot_longer(
+      cols = -cluster,
+      names_to = "age",
+      values_to = "n"
+    ) %>%
+    mutate(
+      cluster = factor(cluster),
+      age = factor(age, levels = if (is.null(age_order)) unique(age) else age_order)
+    ) %>%
+    group_by(age) %>%
+    mutate(
+      prop = n / sum(n)
+    ) %>%
+    arrange(age, desc(prop), .by_group = TRUE) %>%
+    mutate(
+      ymax = cumsum(prop),
+      ymin = lag(ymax, default = 0),
+      xnum = as.numeric(age)
+    ) %>%
+    ungroup()
+  
+  n_clusters <- nlevels(long$cluster)
+  cluster_cols <- palette_func(n_clusters)
+  names(cluster_cols) <- levels(long$cluster)
+  
+  ggplot(long) +
+    geom_rect(
+      aes(
+        xmin = xnum - 0.45,
+        xmax = xnum + 0.45,
+        ymin = ymin,
+        ymax = ymax,
+        fill = cluster
+      ),
+      color = "white",
+      linewidth = 0.2
+    ) +
+    scale_fill_manual(values = cluster_cols) +
+    scale_x_continuous(
+      breaks = seq_along(levels(long$age)),
+      labels = levels(long$age)
+    ) +
+    labs(
+      title = plot_title,
+      x = NULL,
+      y = "Proportion of cells"
+    ) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+
+tables <- list(
+  "pc30_res0.3" = pc30.res0.3,
+  "pc30_res0.5" = pc30.res0.5,
+  "pc30_res0.8" = pc30.res0.8,
+  "pc30_res1.0" = pc30.res1.0,
+  "pc50_res0.3" = pc50.res0.3,
+  "pc50_res0.5" = pc50.res0.5,
+  "pc50_res0.8" = pc50.res0.8,
+  "pc50_res1.0" = pc50.res1.0,
+  "pc100_res0.3" = pc100.res0.3,
+  "pc100_res0.5" = pc100.res0.5,
+  "pc100_res0.8" = pc100.res0.8,
+  "pc100_res1.0" = pc100.res1.0
+)
+
+
+plots <- imap(tables, ~make_100pct_barplot(.x, .y, age_order))
+
+wrap_plots(plots, ncol = 4)
+
